@@ -1,0 +1,8 @@
+Criterio,Peso,Flutter,React Native,Kotlin Multiplatform,Nativo,Evidencia de la calificación
+Competencia actual del equipo,25 %,4,3,2,2,Encuesta interna: 3 integrantes con experiencia en Dart
+Soporte de las capacidades requeridas,20 %,4,3,3,4,Se verifica biblioteca madura para: cámara y mapas
+Madurez del ecosistema para el dominio,15 %,4,4,3,4,N.º de bibliotecas mantenidas en los últimos 6 meses
+Rendimiento requerido,10 %,4,3,3,4,Según los requisitos del producto (60fps constantes)
+Viabilidad sin macOS,10 %,3,3,2,1,Ruta de compilación disponible en Windows/Linux para Android
+Curva de aprendizaje,10 %,4,3,2,2,Tiempo estimado hasta el primer incremento (1 sprint)
+Mantenibilidad post-curso,10 %,4,3,2,2,Documentación y soporte de la comunidad
