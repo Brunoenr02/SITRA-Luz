@@ -1,0 +1,6 @@
+{
+  "projects": {
+    "dev": "sitra-luz-dev",
+    "prod": "sitra-luz-prod"
+  }
+}
