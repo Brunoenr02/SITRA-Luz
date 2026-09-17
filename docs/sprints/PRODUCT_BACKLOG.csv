@@ -1,0 +1,31 @@
+id,Épica,Tipo,Historia de usuario,Criterios de aceptación,Valor (1–5),Riesgo (1–5),Puntos,Prioridad,¿Trata datos personales?,¿Requisitos de seguridad?,Sprint previsto
+US-01,Acceso e identidad,Historia,Como usuario quiero iniciar sesión con mi cuenta para acceder de forma segura a SITRA-Luz,Ver Gherkin,5,5,5,1,Sí: correo y usuario,Sí,1
+US-02,Acceso e identidad,Historia,Como usuario nuevo quiero registrarme con mi correo para acceder a la aplicación,Ver Gherkin,5,4,5,2,Sí: correo,Sí,1
+US-03,Acceso e identidad,Historia,Como usuario quiero cerrar sesión para proteger mi cuenta cuando termine de usar la aplicación,Ver criterios,4,3,2,3,Sí: usuario,Sí,2
+US-04,Acceso e identidad,Historia,Como usuario quiero recuperar mi contraseña para volver a acceder a mi cuenta,Ver criterios,4,4,3,4,Sí: correo,Sí,2
+US-05,Peticiones de medicamentos,Historia,Como personal de enfermería quiero registrar una petición de medicamentos para solicitar los productos que necesita mi área,Ver Gherkin,5,5,8,5,Sí: usuario y doctor,Sí,1
+US-06,Peticiones de medicamentos,Historia,Como personal de enfermería quiero seleccionar medicamentos y cantidades para enviar una petición completa a Farmacia,Ver Gherkin,5,5,5,6,Sí: usuario,Sí,1
+US-07,Peticiones de medicamentos,Historia,Como personal de enfermería quiero indicar el doctor responsable y motivo de la petición para mantener trazabilidad,Ver Gherkin,5,5,5,7,Sí: usuario y doctor,Sí,1
+US-08,Peticiones de medicamentos,Historia,Como usuario quiero consultar el estado de mi petición para saber si está pendiente preparada o lista para recojo,Ver Gherkin,5,4,5,8,Sí: usuario,Sí,1
+US-09,Peticiones de medicamentos,Historia,Como usuario quiero recibir una notificación cuando mi pedido esté listo para recojo para evitar esperas presenciales,Ver Gherkin,5,4,5,9,Sí: usuario,Sí,2
+US-10,Peticiones de medicamentos,Historia,Como usuario quiero consultar el historial de mis peticiones para revisar solicitudes anteriores,Ver Gherkin,4,3,3,10,Sí: usuario,Sí,2
+US-11,Farmacia,Historia,Como personal de Farmacia quiero visualizar las peticiones pendientes para atenderlas en orden,Ver Gherkin,5,5,5,11,Sí: usuario,Sí,1
+US-12,Farmacia,Historia,Como personal de Farmacia quiero revisar el detalle de una petición para preparar correctamente los medicamentos solicitados,Ver Gherkin,5,5,5,12,Sí: usuario y doctor,Sí,1
+US-13,Farmacia,Historia,Como personal de Farmacia quiero cambiar el estado de una petición para informar al área solicitante sobre su avance,Ver Gherkin,5,5,5,13,Sí: usuario,Sí,1
+US-14,Farmacia,Historia,Como personal de Farmacia quiero registrar el despacho de medicamentos para mantener evidencia del movimiento realizado,Ver Gherkin,5,5,8,14,Sí: usuario,Sí,1
+US-15,Farmacia,Historia,Como personal de Farmacia quiero registrar quién recibe el medicamento para completar la trazabilidad del despacho,Ver Gherkin,5,5,5,15,Sí: usuario,Sí,2
+US-16,Inventario interno,Historia,Como personal de Almacén quiero consultar la disponibilidad de medicamentos para conocer el stock antes de realizar una transferencia,Ver Gherkin,5,5,5,16,No,Sí,1
+US-17,Inventario interno,Historia,Como personal de Almacén quiero registrar transferencias hacia Farmacia para mantener actualizado el movimiento interno de medicamentos,Ver Gherkin,5,5,8,17,Sí: usuario,Sí,2
+US-18,Inventario interno,Historia,Como personal de Farmacia quiero registrar la recepción de medicamentos transferidos desde Almacén para confirmar el ingreso,Ver Gherkin,5,4,5,18,Sí: usuario,Sí,2
+US-19,Inventario interno,Historia,Como usuario quiero consultar el historial de transferencias para conocer los movimientos realizados entre áreas,Ver Gherkin,4,4,5,19,Sí: usuario,Sí,2
+US-20,Trazabilidad y auditoría,Historia,Como administrador quiero consultar quién solicitó cada medicamento para facilitar la auditoría del flujo interno,Ver criterios,5,5,5,20,Sí: usuario,Sí,2
+US-21,Trazabilidad y auditoría,Historia,Como administrador quiero consultar fecha y hora de cada movimiento para reconstruir la trazabilidad de los medicamentos,Ver criterios,5,5,3,21,Sí: usuario,Sí,2
+US-22,Trazabilidad y auditoría,Historia,Como administrador quiero consultar el doctor asociado a una petición para verificar el responsable clínico,Ver criterios,5,5,3,22,Sí: doctor,Sí,2
+US-23,Caducidad FEFO,Historia,Como personal de Farmacia quiero recibir alertas de medicamentos próximos a vencer para priorizar su salida mediante FEFO,Ver criterios,5,4,5,23,No,Sí,2
+US-24,Caducidad FEFO,Historia,Como personal de Almacén quiero visualizar los medicamentos próximos a vencer para evitar pérdidas por caducidad,Ver criterios,4,4,3,24,No,Sí,2
+US-25,Notificaciones,Historia,Como usuario quiero recibir notificaciones sobre cambios de estado de mis peticiones para conocer cuándo debo realizar una acción,Ver criterios,4,4,3,25,Sí: usuario,Sí,2
+US-26,Notificaciones,Historia,Como personal de Farmacia quiero recibir avisos de nuevas peticiones para atenderlas oportunamente,Ver criterios,4,4,3,26,Sí: usuario,Sí,2
+US-27,Deuda técnica y habilitadores,Deuda técnica,Configurar la inyección de dependencias para permitir pruebas automatizadas con dobles,Ver criterios,—,4,3,27,No,No,1
+US-28,Deuda técnica y habilitadores,Deuda técnica,Configurar almacenamiento local para permitir consultar información básica cuando no exista conexión,Ver criterios,—,5,5,28,No,Sí,1
+US-29,Integración,Spike,Investigar cómo consumir el servicio de datos existente desde la aplicación móvil con límite de cuatro horas,Documento de conclusión,—,5,3,29,No,Sí,1
+US-30,Integración,Spike,Investigar el mecanismo de notificaciones necesario para avisar cuando una petición esté lista para recojo,Documento de conclusión,—,4,3,30,No,Sí,2
