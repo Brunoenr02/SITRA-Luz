@@ -35,7 +35,7 @@ class UserModel {
       uid: id,
       nombre: data['nombre'] as String? ?? '',
       email: data['email'] as String? ?? '',
-      rol: data['rol'] as String? ?? 'ENFERMERIA',
+      rol: data['rol'] as String? ?? '',
       areasAsignadas: areas,
       fcmToken: data['fcm_token'] as String?,
       activo: data['activo'] as bool? ?? true,

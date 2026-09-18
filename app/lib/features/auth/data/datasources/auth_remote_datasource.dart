@@ -50,15 +50,25 @@ class AuthRemoteDataSource {
 
       return userModel;
     } on AuthApiException catch (e) {
+      final rawMsg = '${e.code} ${e.message}';
+      if (_isNetworkError(rawMsg)) {
+        throw const AuthException('Sin conexión a internet');
+      }
       throw AuthException(_mapSupabaseAuthError(e.code ?? e.message));
     } on PostgrestException catch (e) {
       debugPrint('Error Postgrest al obtener perfil: ${e.message}');
+      if (_isNetworkError('${e.message} ${e.details}')) {
+        throw const AuthException('Sin conexión a internet');
+      }
       throw const AuthException(
         'Error al cargar el perfil de usuario en la base de datos.',
       );
     } catch (e) {
       if (e is AuthException) rethrow;
       debugPrint('Error inesperado en login: $e');
+      if (_isNetworkError(e.toString())) {
+        throw const AuthException('Sin conexión a internet');
+      }
       throw AuthException('Error al iniciar sesión: ${e.toString()}');
     }
   }
@@ -123,8 +133,34 @@ class AuthRemoteDataSource {
     return model;
   }
 
+  /// Detecta si una cadena de error corresponde a una falla de conectividad a internet
+  bool _isNetworkError(String errStr) {
+    final lower = errStr.toLowerCase();
+    return lower.contains('socketexception') ||
+        lower.contains('clientexception') ||
+        lower.contains('failed host lookup') ||
+        lower.contains('network') ||
+        lower.contains('connection') ||
+        lower.contains('unreachable') ||
+        lower.contains('timed out') ||
+        lower.contains('timeout') ||
+        lower.contains('authretryablefetchexception') ||
+        lower.contains('handshakeexception') ||
+        lower.contains('no internet') ||
+        lower.contains('sin conexión') ||
+        lower.contains('host lookup') ||
+        lower.contains('os error') ||
+        lower.contains('errno = 11001') ||
+        lower.contains('errno = 10060') ||
+        lower.contains('errno = 111') ||
+        lower.contains('fetch_error');
+  }
+
   /// Traduce los códigos de error de Supabase Auth a mensajes en español amigables
   String _mapSupabaseAuthError(String codeOrMessage) {
+    if (_isNetworkError(codeOrMessage)) {
+      return 'Sin conexión a internet';
+    }
     final lower = codeOrMessage.toLowerCase();
     if (lower.contains('invalid_credentials') ||
         lower.contains('invalid login credentials') ||
@@ -139,9 +175,6 @@ class AuthRemoteDataSource {
     }
     if (lower.contains('too many requests') || lower.contains('over_request_rate_limit')) {
       return 'Demasiados intentos de acceso. Espera unos minutos.';
-    }
-    if (lower.contains('network') || lower.contains('connection')) {
-      return 'Sin conexión con el servidor. Verifica tu conexión a internet.';
     }
     return 'Error de autenticación: $codeOrMessage';
   }

@@ -46,20 +46,23 @@ extension UserRoleExtension on UserRole {
   static UserRole fromDb(String value) => fromSupabase(value);
 
   static UserRole fromSupabase(String value) {
-    switch (value.toUpperCase()) {
-      case 'ADMINISTRADOR':
-        return UserRole.administrador;
-      case 'JEFATURA_FARMACIA':
-        return UserRole.jefaturaFarmacia;
-      case 'FARMACIA':
-        return UserRole.farmacia;
-      case 'ALMACEN':
-        return UserRole.almacen;
-      case 'ENFERMERIA':
-        return UserRole.enfermeria;
-      default:
-        return UserRole.enfermeria;
+    final norm = value.toUpperCase().trim().replaceAll(' ', '_');
+    if (norm.contains('ADMIN')) {
+      return UserRole.administrador;
     }
+    if (norm.contains('JEFATURA') || norm.contains('JEFE')) {
+      return UserRole.jefaturaFarmacia;
+    }
+    if (norm.contains('FARMACIA') || norm.contains('FARMA')) {
+      return UserRole.farmacia;
+    }
+    if (norm.contains('ALMACEN')) {
+      return UserRole.almacen;
+    }
+    if (norm.contains('ENFERMERIA') || norm.contains('TECNICO') || norm.contains('ENFERMERA')) {
+      return UserRole.enfermeria;
+    }
+    return UserRole.administrador;
   }
 
   static UserRole fromFirestore(String value) => fromSupabase(value);
