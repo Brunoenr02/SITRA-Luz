@@ -17,12 +17,10 @@ class AuthViewModel extends ChangeNotifier {
   UserEntity? get currentUser => _currentUser;
 
   AuthViewModel({required AuthRepository repository})
-      : _repository = repository {
-    _checkCurrentSession();
-  }
+    : _repository = repository;
 
   /// Verifica si hay una sesión activa al iniciar la app
-  Future<void> _checkCurrentSession() async {
+  Future<void> initialize() async {
     _setState(const AuthStateLoading());
     try {
       final user = await _repository.getCurrentUser();
@@ -38,10 +36,7 @@ class AuthViewModel extends ChangeNotifier {
   }
 
   /// Inicia sesión con email y contraseña
-  Future<void> login({
-    required String email,
-    required String password,
-  }) async {
+  Future<void> login({required String email, required String password}) async {
     if (email.trim().isEmpty || password.isEmpty) {
       _setState(const AuthStateError('Por favor completa todos los campos.'));
       return;
@@ -66,7 +61,9 @@ class AuthViewModel extends ChangeNotifier {
       _currentUser = null;
       _setState(const AuthStateUnauthenticated());
     } catch (e) {
-      _setState(AuthStateError('No se pudo cerrar la sesión. Inténtalo de nuevo.'));
+      _setState(
+        AuthStateError('No se pudo cerrar la sesión. Inténtalo de nuevo.'),
+      );
     }
   }
 

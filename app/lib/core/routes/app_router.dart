@@ -39,8 +39,11 @@ class AppRoutes {
 
 /// Crea y configura el enrutador GoRouter con protección de rutas y redirección por rol
 GoRouter createRouter(AuthViewModel authViewModel) {
+  final initialUser = authViewModel.currentUser;
   return GoRouter(
-    initialLocation: AppRoutes.login,
+    initialLocation: initialUser == null
+        ? AppRoutes.login
+        : AppRoutes.routeForRole(initialUser.rol),
     refreshListenable: authViewModel,
     routes: [
       GoRoute(

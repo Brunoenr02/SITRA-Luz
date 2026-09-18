@@ -5,16 +5,16 @@ import 'package:sitra_luz/features/auth/presentation/viewmodels/auth_viewmodel.d
 import 'package:sitra_luz/main.dart';
 
 void main() {
-  testWidgets('SITRA-Luz app renders login screen correctly', (WidgetTester tester) async {
+  testWidgets('SITRA-Luz app renders login screen correctly', (
+    WidgetTester tester,
+  ) async {
     final mockRepository = MockAuthRepository();
     final authViewModel = AuthViewModel(repository: mockRepository);
+    await authViewModel.initialize();
     final router = createRouter(authViewModel);
 
     await tester.pumpWidget(
-      SitraLuzApp(
-        authViewModel: authViewModel,
-        router: router,
-      ),
+      SitraLuzApp(authViewModel: authViewModel, router: router),
     );
     await tester.pumpAndSettle();
 
