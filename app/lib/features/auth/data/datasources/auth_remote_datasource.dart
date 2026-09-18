@@ -1,5 +1,7 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:async';
+import 'package:flutter/foundation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../core/services/notification_service.dart';
 import '../models/user_model.dart';
 
 /// Excepción específica del módulo de autenticación
@@ -11,64 +13,84 @@ class AuthException implements Exception {
   String toString() => message;
 }
 
-/// Fuente de datos remota — interactúa directamente con Firebase Auth y Firestore.
-/// Esta clase es la ÚNICA que conoce Firebase en la capa de datos.
+/// Fuente de datos remota — interactúa directamente con Supabase (Auth + PostgreSQL).
+/// Esta clase es la ÚNICA que conoce Supabase en la capa de datos de autenticación.
 class AuthRemoteDataSource {
-  final FirebaseAuth? _customAuth;
-  final FirebaseFirestore? _customFirestore;
+  final SupabaseClient? _customClient;
 
-  AuthRemoteDataSource({
-    FirebaseAuth? firebaseAuth,
-    FirebaseFirestore? firestore,
-  })  : _customAuth = firebaseAuth,
-        _customFirestore = firestore;
+  AuthRemoteDataSource({SupabaseClient? client}) : _customClient = client;
 
-  FirebaseAuth get _firebaseAuth => _customAuth ?? FirebaseAuth.instance;
-  FirebaseFirestore get _firestore => _customFirestore ?? FirebaseFirestore.instance;
+  SupabaseClient get _supabase => _customClient ?? Supabase.instance.client;
 
-  /// Inicia sesión con email y contraseña usando Firebase Auth
+  /// Inicia sesión con email y contraseña usando Supabase Auth
   Future<UserModel> login({
     required String email,
     required String password,
   }) async {
     try {
-      final credential = await _firebaseAuth.signInWithEmailAndPassword(
+      final response = await _supabase.auth.signInWithPassword(
         email: email.trim(),
         password: password,
       );
-      final firebaseUser = credential.user;
-      if (firebaseUser == null) {
+
+      final user = response.user;
+      if (user == null) {
         throw const AuthException('No se pudo obtener el usuario autenticado.');
       }
-      return await _getUserModel(firebaseUser.uid);
-    } on FirebaseAuthException catch (e) {
-      throw AuthException(_mapFirebaseAuthError(e.code));
+
+      // Obtener el perfil asociado desde la tabla 'profiles'
+      final userModel = await _getUserModel(user.id);
+
+      // Sincronizar el token de notificaciones FCM con Supabase si está disponible
+      try {
+        await NotificationService.instance.syncTokenWithSupabase();
+      } catch (e) {
+        debugPrint('⚠️ No se pudo sincronizar token FCM tras login: $e');
+      }
+
+      return userModel;
+    } on AuthApiException catch (e) {
+      throw AuthException(_mapSupabaseAuthError(e.code ?? e.message));
+    } on PostgrestException catch (e) {
+      debugPrint('Error Postgrest al obtener perfil: ${e.message}');
+      throw const AuthException(
+        'Error al cargar el perfil de usuario en la base de datos.',
+      );
+    } catch (e) {
+      if (e is AuthException) rethrow;
+      debugPrint('Error inesperado en login: $e');
+      throw AuthException('Error al iniciar sesión: ${e.toString()}');
     }
   }
 
-  /// Cierra la sesión activa
+  /// Cierra la sesión activa en Supabase
   Future<void> logout() async {
-    await _firebaseAuth.signOut();
+    try {
+      await _supabase.auth.signOut();
+    } catch (e) {
+      debugPrint('Error al cerrar sesión en Supabase: $e');
+    }
   }
 
   /// Obtiene el UserModel del usuario actualmente autenticado
   Future<UserModel?> getCurrentUser() async {
     try {
-      final firebaseUser = _firebaseAuth.currentUser;
-      if (firebaseUser == null) return null;
-      return await _getUserModel(firebaseUser.uid);
+      final user = _supabase.auth.currentUser;
+      if (user == null) return null;
+      return await _getUserModel(user.id);
     } catch (_) {
       return null;
     }
   }
 
-  /// Stream de cambios en el estado de autenticación
+  /// Stream de cambios en el estado de autenticación de Supabase
   Stream<UserModel?> get authStateChanges {
     try {
-      return _firebaseAuth.authStateChanges().asyncMap((firebaseUser) async {
-        if (firebaseUser == null) return null;
+      return _supabase.auth.onAuthStateChange.asyncMap((data) async {
+        final user = data.session?.user;
+        if (user == null) return null;
         try {
-          return await _getUserModel(firebaseUser.uid);
+          return await _getUserModel(user.id);
         } catch (_) {
           return null;
         }
@@ -78,41 +100,49 @@ class AuthRemoteDataSource {
     }
   }
 
-  /// Lee el documento del usuario en Firestore y lo convierte a UserModel
+  /// Consulta la fila del usuario en la tabla `profiles` de Supabase
   Future<UserModel> _getUserModel(String uid) async {
-    final doc = await _firestore.collection('users').doc(uid).get();
-    if (!doc.exists || doc.data() == null) {
+    final response = await _supabase
+        .from('profiles')
+        .select()
+        .eq('id', uid)
+        .maybeSingle();
+
+    if (response == null) {
       throw const AuthException(
-        'Perfil de usuario no encontrado. Contacta al administrador.',
+        'Perfil de usuario no registrado en la base de datos de la clínica.',
       );
     }
-    final model = UserModel.fromFirestore(doc.data()!, uid);
+
+    final model = UserModel.fromMap(response, uid);
     if (!model.activo) {
       throw const AuthException(
-        'Tu cuenta está deshabilitada. Contacta al administrador.',
+        'Tu cuenta está deshabilitada. Contacta al administrador del sistema.',
       );
     }
     return model;
   }
 
-  /// Traduce los códigos de error de Firebase a mensajes amigables en español
-  String _mapFirebaseAuthError(String code) {
-    switch (code) {
-      case 'user-not-found':
-        return 'No existe ningún usuario con ese correo.';
-      case 'wrong-password':
-      case 'invalid-credential':
-        return 'Correo o contraseña incorrectos.';
-      case 'invalid-email':
-        return 'El formato del correo no es válido.';
-      case 'user-disabled':
-        return 'Esta cuenta ha sido deshabilitada.';
-      case 'too-many-requests':
-        return 'Demasiados intentos. Intenta de nuevo más tarde.';
-      case 'network-request-failed':
-        return 'Sin conexión a internet. Verifica tu red.';
-      default:
-        return 'Error de autenticación ($code). Inténtalo de nuevo.';
+  /// Traduce los códigos de error de Supabase Auth a mensajes en español amigables
+  String _mapSupabaseAuthError(String codeOrMessage) {
+    final lower = codeOrMessage.toLowerCase();
+    if (lower.contains('invalid_credentials') ||
+        lower.contains('invalid login credentials') ||
+        lower.contains('invalid_grant')) {
+      return 'Correo o contraseña incorrectos.';
     }
+    if (lower.contains('user not found') || lower.contains('user_not_found')) {
+      return 'No existe ningún usuario registrado con ese correo.';
+    }
+    if (lower.contains('email not confirmed') || lower.contains('email_not_confirmed')) {
+      return 'El correo aún no ha sido confirmado.';
+    }
+    if (lower.contains('too many requests') || lower.contains('over_request_rate_limit')) {
+      return 'Demasiados intentos de acceso. Espera unos minutos.';
+    }
+    if (lower.contains('network') || lower.contains('connection')) {
+      return 'Sin conexión con el servidor. Verifica tu conexión a internet.';
+    }
+    return 'Error de autenticación: $codeOrMessage';
   }
 }

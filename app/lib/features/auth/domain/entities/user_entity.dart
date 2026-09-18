@@ -24,7 +24,9 @@ extension UserRoleExtension on UserRole {
     }
   }
 
-  String get firestoreValue {
+  String get dbValue => supabaseValue;
+
+  String get supabaseValue {
     switch (this) {
       case UserRole.administrador:
         return 'ADMINISTRADOR';
@@ -39,7 +41,11 @@ extension UserRoleExtension on UserRole {
     }
   }
 
-  static UserRole fromFirestore(String value) {
+  String get firestoreValue => supabaseValue;
+
+  static UserRole fromDb(String value) => fromSupabase(value);
+
+  static UserRole fromSupabase(String value) {
     switch (value.toUpperCase()) {
       case 'ADMINISTRADOR':
         return UserRole.administrador;
@@ -55,6 +61,8 @@ extension UserRoleExtension on UserRole {
         return UserRole.enfermeria;
     }
   }
+
+  static UserRole fromFirestore(String value) => fromSupabase(value);
 }
 
 /// Entidad de dominio pura — no depende de ningún framework

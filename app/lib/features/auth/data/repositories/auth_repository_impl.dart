@@ -1,13 +1,11 @@
 import '../../domain/entities/user_entity.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_remote_datasource.dart';
-import 'mock_auth_repository.dart';
 
-/// Implementación concreta del [AuthRepository] que usa Firebase.
-/// La capa de dominio solo conoce la interfaz, no esta clase.
+/// Implementación de producción de [AuthRepository] que autentica
+/// exclusivamente contra la base de datos y sistema de usuarios de Supabase.
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource _dataSource;
-  final MockAuthRepository _mockFallback = MockAuthRepository();
 
   AuthRepositoryImpl({required AuthRemoteDataSource dataSource})
       : _dataSource = dataSource;
@@ -17,21 +15,11 @@ class AuthRepositoryImpl implements AuthRepository {
     required String email,
     required String password,
   }) async {
-    final cleanEmail = email.trim().toLowerCase();
-    final isDemoAccount =
-        MockAuthRepository.demoUsers.any((u) => u.email == cleanEmail);
-
-    if (isDemoAccount) {
-      try {
-        final userModel = await _dataSource.login(email: email, password: password);
-        return userModel.toEntity();
-      } catch (_) {
-        // Si aún no está creado en la nube de Firebase, responde con el usuario demo
-        return await _mockFallback.login(email: email, password: password);
-      }
-    }
-
-    final userModel = await _dataSource.login(email: email, password: password);
+    // Autenticación estricta y directa contra Supabase (Auth + profiles)
+    final userModel = await _dataSource.login(
+      email: email,
+      password: password,
+    );
     return userModel.toEntity();
   }
 

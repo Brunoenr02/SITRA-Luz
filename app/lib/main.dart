@@ -2,38 +2,48 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'core/config/supabase_config.dart';
 import 'core/routes/app_router.dart';
+import 'core/services/notification_service.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/data/datasources/auth_remote_datasource.dart';
 import 'features/auth/data/repositories/auth_repository_impl.dart';
-import 'features/auth/data/repositories/mock_auth_repository.dart';
 import 'features/auth/domain/repositories/auth_repository.dart';
 import 'features/auth/presentation/viewmodels/auth_viewmodel.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  bool firebaseInitialized = false;
-  try {
-    // Intenta inicializar Firebase si ya se agregaron los archivos de configuración
-    await Firebase.initializeApp();
-    firebaseInitialized = true;
-    debugPrint(' Firebase inicializado exitosamente.');
-  } on FirebaseException catch (e) {
-    debugPrint(' FirebaseException al inicializar: ${e.code} — ${e.message}');
-    debugPrint('ℹ SITRA-Luz activo en Modo Simulación Local (MockAuthRepository).');
-  } catch (e, stackTrace) {
-    // Captura cualquier otro error (MissingPluginException, PlatformException, etc.)
-    debugPrint(' Error inesperado al inicializar Firebase: $e');
-    debugPrint('StackTrace: $stackTrace');
-    debugPrint('ℹ️ SITRA-Luz activo en Modo Simulación Local (MockAuthRepository).');
+  // 1. Inicialización de Supabase (Base de Datos principal y Autenticación)
+  if (SupabaseConfig.isConfigured) {
+    try {
+      await Supabase.initialize(
+        url: SupabaseConfig.cleanUrl,
+        anonKey: SupabaseConfig.supabaseAnonKey,
+      );
+      debugPrint(' Supabase inicializado exitosamente (BD & Auth activos).');
+    } catch (e) {
+      debugPrint(' Error al inicializar Supabase: $e');
+    }
+  } else {
+    debugPrint(' Credenciales de Supabase pendientes en lib/core/config/supabase_config.dart');
   }
 
-  // Si Firebase está activo usa AuthRepositoryImpl; de lo contrario usa MockAuthRepository con los 5 roles
-  final AuthRepository authRepository = firebaseInitialized
-      ? AuthRepositoryImpl(dataSource: AuthRemoteDataSource())
-      : MockAuthRepository();
+  // 2. Inicialización de Firebase (Exclusivo para Notificaciones Push - FCM)
+  try {
+    await Firebase.initializeApp();
+    debugPrint('Firebase inicializado exitosamente (exclusivo para notificaciones FCM).');
+    await NotificationService.instance.initialize();
+  } catch (e) {
+    debugPrint('ℹ️ Firebase Notifications en pausa o sin archivo de servicios: $e');
+  }
+
+  // 3. Repositorio de Autenticación en Producción (100% Supabase)
+  final AuthRepository authRepository = AuthRepositoryImpl(
+    dataSource: AuthRemoteDataSource(),
+  );
 
   final authViewModel = AuthViewModel(repository: authRepository);
   final router = createRouter(authViewModel);

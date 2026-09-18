@@ -21,6 +21,6 @@ void main() {
     // Verifica que el logo y título principal aparezcan
     expect(find.text('SITRA-LUZ'), findsOneWidget);
     expect(find.text('Iniciar Sesión'), findsOneWidget);
-    expect(find.text('INGRESAR AL SISTEMA'), findsOneWidget);
+    expect(find.text('INGRESAR'), findsOneWidget);
   });
 }
