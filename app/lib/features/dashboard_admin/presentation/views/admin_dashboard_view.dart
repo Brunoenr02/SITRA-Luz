@@ -4,6 +4,8 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/sitra_app_bar.dart';
 import '../../../auth/presentation/viewmodels/auth_viewmodel.dart';
 
+import '../../../../core/widgets/product_user_data_card.dart';
+
 class AdminDashboardView extends StatelessWidget {
   const AdminDashboardView({super.key});
 
@@ -107,7 +109,10 @@ class AdminDashboardView extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
+
+            // Dato del producto / Entidad cargada (Examen Tipo 3 - Ítem 1)
+            const ProductUserDataCard(),
 
             // Métricas KPI
             const Text(

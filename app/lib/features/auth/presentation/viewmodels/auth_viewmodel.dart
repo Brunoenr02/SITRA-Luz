@@ -4,6 +4,9 @@ import '../../domain/repositories/auth_repository.dart';
 import '../../data/datasources/auth_remote_datasource.dart';
 import '../states/auth_state.dart';
 
+import '../../../../core/utils/input_sanitizer.dart';
+import '../../../../core/utils/auth_input_validator.dart';
+
 /// ViewModel del módulo de autenticación.
 /// Implementa [ChangeNotifier] para notificar a la UI.
 /// No importa nada de Firebase directamente — usa [AuthRepository].
@@ -37,18 +40,33 @@ class AuthViewModel extends ChangeNotifier {
     }
   }
 
-  /// Inicia sesión con email y contraseña
+  /// Inicia sesión con email y contraseña.
+  /// Implementa limpieza (sanitize) y validación previa a la red (validate).
   Future<void> login({
     required String email,
     required String password,
   }) async {
-    if (email.trim().isEmpty || password.isEmpty) {
-      _setState(const AuthStateError('Por favor completa todos los campos.'));
+    // 1. Limpieza de datos (Item 2)
+    final cleanEmail = InputSanitizer.sanitizeEmail(email);
+    final cleanPassword = InputSanitizer.sanitize(password);
+
+    // 2. Validación antes de la red (Item 3)
+    try {
+      AuthInputValidator.validateEmail(cleanEmail);
+      AuthInputValidator.validatePassword(cleanPassword);
+    } on ValidationException catch (e) {
+      // SE NIEGA A LLAMAR AL REPOSITORIO SI LA VALIDACIÓN PREVIA FALLA
+      _setState(AuthStateError(e.message));
       return;
     }
+
+    // 3. Invocación a la red/repositorio (Sólo si superó las validaciones locales)
     _setState(const AuthStateLoading());
     try {
-      final user = await _repository.login(email: email, password: password);
+      final user = await _repository.login(
+        email: cleanEmail,
+        password: cleanPassword,
+      );
       _currentUser = user;
       _setState(AuthStateAuthenticated(user));
     } on AuthException catch (e) {
