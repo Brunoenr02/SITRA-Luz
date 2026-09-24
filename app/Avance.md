@@ -60,21 +60,21 @@ El sistema define 5 roles estrictamente tipificados:
 ### 4.1 Tecnologías Base
 * **Frontend Móvil:** Flutter 3.x / Dart 3.
 * **Gestor de Estados:** `Provider` (`ChangeNotifierProvider`).
-* **Enrutamiento:** `GoRouter` con guardias de seguridad basadas en autenticación y rol.
+* **Enrutamiento:** `GoRouter` con guardias de seguridad basadas en autenticación y rol (RBAC).
 * **Diseño / UI:** Material 3 con tema corporativo médico (`AppTheme`, `AppColors`) y tipografía `GoogleFonts.inter`.
-* **Backend Cloud:**
-  * **Firebase Authentication:** Autenticación por correo y contraseña.
-  * **Cloud Firestore:** Base de datos NoSQL para perfiles de usuario, roles, fichas de pedido y auditoría.
-  * **Firebase Storage / FCM:** Para comprobantes/fotos y notificaciones push.
+* **Backend Cloud (100% Supabase):**
+  * **Supabase Database (PostgreSQL):** Base de datos relacional para catálogo maestro, lotes, inventario por áreas, fichas de dispensación, kits y bitácora inmutable de auditoría (10 tablas con RLS y triggers automáticos).
+  * **Supabase Auth:** Autenticación por correo y contraseña con JWT y sincronización automática a la tabla `profiles`.
+  * **Modo Offline / Fallback:** Repositorio simulado (`MockAuthRepository`) para pruebas sin conexión.
+* **Notificaciones Push (Firebase FCM):**
+  * **Firebase Cloud Messaging (FCM):** Servicio reservado exclusivamente para despacho y recepción de alertas y notificaciones push. Actualmente diferido para una fase posterior mediante feature-flag (`NotificationService.enablePushNotifications = false`).
 
-### 4.2 Configuración Firebase y Android
-* **Proyecto Firebase Cloud:** `sitra-luz-clinica` (ID: `sitra-luz-clinica`, Número: `998997655822`).
+### 4.2 Configuración Supabase y Android
+* **Instancia Supabase:** `https://nedeqnvpkalrchswrapr.supabase.co` configurada en `lib/core/config/supabase_config.dart`.
+* **Script de BD:** `docs/supabase/setup_sitra_luz.sql` con esquema relacional completo.
 * **Android Application ID / Namespace:** `ap.sitra.luz.clinica`.
-* **Archivo de configuración vinculado:** `sitra_luz_app/android/app/google-services.json`.
-* **Kotlin Gradle Plugin:** Versión `2.3.0`.
-* **Android Gradle Plugin (AGP):** `8.9.1`.
-* **Google Services Plugin:** `4.4.2`.
-* **Compatibilidad Java / Kotlin:** `JVM 11` sincronizado para tareas Java y Kotlin.
+* **Permisos de Red Android:** `android.permission.INTERNET`, `android.permission.ACCESS_NETWORK_STATE`, y `usesCleartextTraffic="true"`.
+* **Google Services Plugin:** Desactivado temporalmente en `android/app/build.gradle.kts` hasta la implementación de Firebase FCM en fases posteriores.
 
 ### 4.3 Patrón Arquitectónico (Clean Architecture + MVVM)
 El código en `sitra_luz_app/lib/` respeta la separación de capas:
@@ -130,38 +130,38 @@ Para evaluar el sistema inmediatamente (incluso sin internet o antes de poblar F
 
 ## 📦 6. Estado Actual de la Implementación (Avance Concluido)
 
-1. ✅ **Creación del proyecto base:** Estructurado en `sitra_luz_app` con dependencias modernas (`firebase_core`, `firebase_auth`, `cloud_firestore`, `provider`, `go_router`, `google_fonts`).
+1. ✅ **Creación del proyecto base:** Estructurado en `app/` con dependencias modernas (`supabase_flutter`, `provider`, `go_router`, `google_fonts`, `shared_preferences`).
 2. ✅ **Diseño del Sistema:** Implementado `AppTheme` y `AppColors` con identidad visual médica propia de la clínica.
-3. ✅ **Capa de Dominio y Datos:** Entidades, repositorios y modelos mapeados listos para Firestore.
-4. ✅ **Seguridad y Enrutamiento:** `GoRouter` configurado con guardias que impiden acceder a dashboards sin sesión y redirigen automáticamente a la pantalla del rol correspondiente tras autenticar.
+3. ✅ **Capa de Dominio y Datos (100% Supabase):** Entidades, repositorios y modelos mapeados con Supabase Auth y tabla `profiles`, con fallback a `MockAuthRepository`.
+4. ✅ **Seguridad y Enrutamiento:** `GoRouter` configurado con guardias RBAC que impiden acceder a dashboards sin sesión y redirigen automáticamente a la pantalla del rol correspondiente tras autenticar.
 5. ✅ **5 Pantallas de Roles Completadas:**
    * `/admin`: Métricas de auditoría, control de accesos, sincronización Dialyma.
    * `/jefatura`: Alertas críticas FEFO (<30d, <90d), aprobaciones de alto costo.
    * `/farmacia`: Cola de dispensación de recetas y pedidos de piso pendientes.
    * `/almacen`: Control de guías de remisión, monitoreo de cadena de frío (3.8 °C).
    * `/enfermeria`: Botiquín del servicio (UCI Adultos), botón de pedido urgente de reposición.
-6. ✅ **Sincronización Firebase Android:**
-   * Archivo `google-services.json` verificado e integrado en `android/app/`.
-   * Gradle adaptado con `applicationId = "ap.sitra.luz.clinica"`, plugin `com.google.gms.google-services 4.4.2` y Kotlin `2.3.0`.
-7. ✅ **Compilación Exitosa del APK:**
-   * `flutter analyze`: 0 errores.
-   * `flutter test`: Pruebas de widget aprobadas.
-   * `flutter build apk --debug`: **Generado exitosamente** en `sitra_luz_app/build/app/outputs/flutter-apk/app-debug.apk`.
+6. ✅ **Configuración Android y Red:**
+   * Permisos de red en AndroidManifest: `INTERNET`, `ACCESS_NETWORK_STATE`, y `usesCleartextTraffic="true"`.
+   * Google Services Plugin desactivado temporalmente para permitir ejecución fluida sin requerir `google-services.json` de inmediato.
+   * `NotificationService` con bandera de desacoplamiento seguro (`enablePushNotifications = false`).
+7. ✅ **Compilación Exitosa:**
+   * `flutter analyze`: 0 errores (Clean).
+   * `flutter run` / `flutter build apk`: Ejecutable sin dependencias bloqueantes de Firebase.
 
 ---
 
 ## 🗺️ 7. Hoja de Ruta Pendiente (Próximos Pasos para el Siguiente Sprint)
 
-Cuando se retome el proyecto en este o en otro entorno, los siguientes módulos a construir son:
+Cuando se retome el proyecto, los siguientes módulos a construir son:
 
-1. **Estructura de Base de Datos Firestore (Colecciones operativas):**
-   * `/medicamentos`: Catálogo de principios activos, formas farmacéuticas, stock mínimo.
-   * `/lotes`: Registro de lote, fecha de vencimiento, stock actual, semáforo FEFO (verde, ámbar, rojo), condición de almacenamiento (temperatura).
-   * `/fichas_pedido`: Solicitudes de enfermería a farmacia (`Borrador` → `Enviado` → `En preparación` → `Listo para recoger` → `Entregado`).
-   * `/movimientos_kardex`: Auditoría inmutable de cada entrada, salida, transferencia o administración a paciente.
+1. **Población y Enlace de Vistas con Tablas Supabase:**
+   * Vincular los dashboards directamente con las tablas ya creadas en Supabase (`medicamentos`, `lotes`, `inventario_stock`, `dispensaciones`, `pedidos_abastecimiento`, `auditoria_trazabilidad`).
 2. **Escaneo GTIN/GS1 y Código de Barras (Módulo 1 y 3):**
    * Integración de `mobile_scanner` para lectura de código de barras físico en cajas y frascos sin requerir internet.
-3. **Flujo de Peticiones y Dispensación en Tiempo Real:**
-   * Uso de `Firestore.snapshots()` para que cuando Enfermería presione "Pedido Urgente de Reposición", Farmacia lo vea reflejado al instante en su pantalla de dispensación.
-4. **Validación de Administración a Paciente:**
+3. **Flujo de Peticiones y Dispensación en Tiempo Real (Supabase Realtime):**
+   * Uso de canales `supabase.channel()` / Postgres Changes para que cuando Enfermería presione "Pedido Urgente de Reposición", Farmacia lo vea reflejado al instante en su pantalla de dispensación.
+4. **Activación de Notificaciones Push (Firebase FCM):**
+   * Incorporar el archivo `google-services.json` en `android/app/`.
+   * Reactivar el plugin en `build.gradle.kts` y activar `enablePushNotifications = true` en `NotificationService`.
+5. **Validación de Administración a Paciente:**
    * Lectura cruzada: Escaneo de pulsera del paciente + escaneo del medicamento administrado para garantizar trazabilidad de dosis unitaria.

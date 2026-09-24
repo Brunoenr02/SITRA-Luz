@@ -20,6 +20,11 @@ class NotificationService {
   NotificationService._();
   static final NotificationService instance = NotificationService._();
 
+  /// Bandera para habilitar o diferir las notificaciones push de Firebase (FCM).
+  /// Actualmente desactivada (false) ya que la base de datos y autenticación están
+  /// 100% en Supabase, y el módulo de notificaciones push se activará en una fase posterior.
+  static const bool enablePushNotifications = false;
+
   String? _fcmToken;
   String? get fcmToken => _fcmToken;
 
@@ -28,6 +33,10 @@ class NotificationService {
 
   /// Inicializa Firebase Cloud Messaging y configura los receptores de eventos
   Future<void> initialize() async {
+    if (!enablePushNotifications) {
+      debugPrint('ℹ️ [NotificationService] Firebase FCM pospuesto para una fase posterior. Supabase gestiona BD y Auth.');
+      return;
+    }
     if (_initialized) return;
 
     try {
@@ -78,6 +87,7 @@ class NotificationService {
 
   /// Vincula el token de FCM del dispositivo con el perfil del usuario en Supabase
   Future<void> syncTokenWithSupabase([String? token]) async {
+    if (!enablePushNotifications) return;
     final activeToken = token ?? _fcmToken;
     if (activeToken == null || activeToken.isEmpty) return;
 

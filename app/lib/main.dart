@@ -31,13 +31,18 @@ void main() async {
     debugPrint(' Credenciales de Supabase pendientes en lib/core/config/supabase_config.dart');
   }
 
-  // 2. Inicialización de Firebase (Exclusivo para Notificaciones Push - FCM)
-  try {
-    await Firebase.initializeApp();
-    debugPrint('Firebase inicializado exitosamente (exclusivo para notificaciones FCM).');
-    await NotificationService.instance.initialize();
-  } catch (e) {
-    debugPrint('ℹ️ Firebase Notifications en pausa o sin archivo de servicios: $e');
+  // 2. Inicialización de Notificaciones Push (Firebase FCM diferido para fases posteriores)
+  // Toda la persistencia, modelos relacionales y autenticación se gestionan 100% en Supabase.
+  if (NotificationService.enablePushNotifications) {
+    try {
+      await Firebase.initializeApp();
+      debugPrint(' Firebase inicializado exitosamente (exclusivo para notificaciones FCM).');
+      await NotificationService.instance.initialize();
+    } catch (e) {
+      debugPrint('ℹ️ Firebase Notifications en pausa o sin archivo de servicios: $e');
+    }
+  } else {
+    debugPrint('ℹ️ Notificaciones Push (Firebase FCM) en pausa temporal. Toda la BD y Auth operan en Supabase.');
   }
 
   // 3. Repositorio de Autenticación en Producción (100% Supabase)
