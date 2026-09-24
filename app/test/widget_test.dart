@@ -1,5 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sitra_luz/core/routes/app_router.dart';
+import 'package:sitra_luz/features/almacen/data/repositories/almacen_repository_impl.dart';
+import 'package:sitra_luz/features/almacen/presentation/viewmodels/almacen_viewmodel.dart';
 import 'package:sitra_luz/features/auth/data/repositories/mock_auth_repository.dart';
 import 'package:sitra_luz/features/auth/presentation/viewmodels/auth_viewmodel.dart';
 import 'package:sitra_luz/main.dart';
@@ -8,11 +10,13 @@ void main() {
   testWidgets('SITRA-Luz app renders login screen correctly', (WidgetTester tester) async {
     final mockRepository = MockAuthRepository();
     final authViewModel = AuthViewModel(repository: mockRepository);
+    final almacenViewModel = AlmacenViewModel(repository: AlmacenRepositoryImpl());
     final router = createRouter(authViewModel);
 
     await tester.pumpWidget(
       SitraLuzApp(
         authViewModel: authViewModel,
+        almacenViewModel: almacenViewModel,
         router: router,
       ),
     );

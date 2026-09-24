@@ -80,8 +80,12 @@ CREATE TABLE IF NOT EXISTS public.lotes (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     medicamento_id UUID NOT NULL REFERENCES public.medicamentos(id) ON DELETE CASCADE,
     numero_lote TEXT NOT NULL,
+    fecha_fabricacion DATE,
     fecha_vencimiento DATE NOT NULL,
     distribuidor TEXT,
+    temperatura_recepcion NUMERIC(4, 1),
+    observaciones TEXT,
+    activo BOOLEAN NOT NULL DEFAULT true,
     fecha_ingreso TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
     created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
     CONSTRAINT uq_medicamento_lote UNIQUE (medicamento_id, numero_lote)
@@ -184,6 +188,7 @@ CREATE TABLE IF NOT EXISTS public.auditoria_trazabilidad (
     area_origen TEXT,
     area_destino TEXT,
     cantidad INT,
+    descripcion TEXT,
     detalles JSONB DEFAULT '{}'::jsonb,
     fecha TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
