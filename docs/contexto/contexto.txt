@@ -1,0 +1,229 @@
+La tabla completa que te di corresponde a esta semana completa (Daily 1), no es la mitad — porque todo lo que aparece ahí (TT-01, TT-02 borrador, TT-03, DT-01, TT-04) es exactamente lo que Bruno, Walter y David ya reportaron como hecho en su primer daily. No hay que partirla.
+
+Lo que sí queda pendiente para la Semana 2 (Daily 2) es:
+
+Terminar lo que quedó a medias esta semana: TT-02 (cerrar el contrato de API), DT-01 (wireframe de Enfermería), TT-04 (terminar documentación ER).
+Recién ahí arranca el desarrollo real de HU-23 (login con roles), pasando de "Sprint Backlog" a "En progreso".
+Cómo queda dividido entre las 2 semanas del Sprint 1
+
+Semana 1 (Daily 1) — ya cerrada, es la tabla completa que viste:
+
+TT-01: Esquema MSSQL + NoSQL → Listo/En revisión
+TT-02: Contrato de API → En progreso
+TT-03: Estructura Flutter + CI/CD → En pruebas
+DT-01: Wireframes → Listo (parcial) / En progreso (Enfermería)
+TT-04: Documentación ER → En progreso
+HU-23: Sprint Backlog (sin iniciar)
+
+Semana 2 (Daily 2) — lo que falta:
+
+Cerrar TT-02, DT-01 y TT-04 (pasar todo a "Listo").
+Desarrollar HU-23 completa: pantalla de login, LoginViewModel, conexión con endpoint de auth, enrutamiento por rol, pruebas.
+Demo de cierre del Sprint 1: mostrar login funcional con los 3 roles diferenciados.
+
+Así el Daily 2 no repite nada de lo ya hecho, solo reporta el cierre de las tareas técnicas colgantes y el avance real de HU-23, que es la única HU comprometida en este sprint.
+
+
+
+
+
+
+respuesta anterior:
+Perfecto, esa decisión es más sana. Tienes razón en la confusión: la Semana 1 fue 100% trabajo técnico de base (esquema de BD, estructura Flutter, wireframes), no código de HU01-HU04. Yo los etiqueté así para "amarrarlos" a una HU futura, pero eso generaba la confusión que notaste. Vamos a corregirlo del todo.
+
+Nueva decisión de alcance
+Sprint 1: solo cimientos técnicos + HU-23 (Inicio de sesión con rol), que es la única HU realmente básica y ya evidenciable esta quincena.
+Sprint 2: toda la Épica A — HU-01, HU-02, HU-03, HU-04 (Registro Inteligente) completa, porque es la que integra cámara + IA + validación, más compleja.
+Nomenclatura correcta para el Daily 1 (corregido)
+
+Las tareas de esta semana no son HU, son Tareas Técnicas (TT) y una Tarea de Diseño (DT). Así se colocan:
+
+Código	Nombre de la tarea	Tipo
+TT-01	Diseño de esquema MSSQL + colecciones NoSQL	Tarea Técnica
+TT-02	Contrato de API central (borrador)	Tarea Técnica
+TT-03	Estructura base Flutter (MVVM) + CI/CD + entornos Firebase	Tarea Técnica
+DT-01	Wireframes de interfaces por rol (Almacén, Jefatura, Enfermería)	Diseño UX
+TT-04	Documentación del modelo híbrido de datos (/docs)	Tarea Técnica
+
+Estas tareas no pertenecen a ninguna HU todavía porque son infraestructura transversal — sirven de base para varias HU a la vez (HU-01 a HU-25), no para una sola. Por eso no deben ir etiquetadas como "HU23" ni "HU24".
+
+Estado del tablero — corregido
+Columna	Ítems	WIP	¿Se respeta?
+Sprint backlog	HU-23 (Inicio de sesión)	—	—
+En progreso	TT-02 (Contrato API), DT-01 (Wireframe Enfermería), TT-04 (Documentación ER)	2 por persona	Sí
+En revisión	TT-01 (Esquema MSSQL/NoSQL)	3	Sí
+En pruebas	TT-03 (Estructura MVVM + CI/CD)	2	Sí
+Listo	TT-01 parcial (Colecciones NoSQL), DT-01 parcial (Wireframes Almacén y Jefatura)	—	—
+
+Nota clave: HU-23 recién entra en Sprint Backlog porque todavía no se ha empezado a construir el login en sí (eso depende de que TT-02, el contrato de API, esté cerrado). No debería aparecer todavía en "En progreso" — eso también corrige el error de antes.
+
+
+
+respuesta anterior: 
+
+
+Organizando y verificando la lista completa de historias de usuario.
+Organizando y verificando la lista completa de historias de usuario.
+Historias de Usuario que mencioné como HU01–HU04
+Estas pertenecen a la Épica A — Registro Inteligente (Almacén), la que se trabaja en la Semana 2 del Sprint 1:
+
+HU01: Como usuario de Almacén, quiero escanear el código GTIN de un medicamento para registrarlo sin errores de tipeo (offline, ML Kit).
+HU02: Como usuario de Almacén, quiero tomar una foto opcional de la caja para que la IA valide y complete los datos.
+HU03: Como usuario de Almacén, quiero que el sistema extraiga nombre comercial, principio activo, lote, vencimiento, registro sanitario y forma farmacéutica automáticamente.
+HU04: Como usuario de Almacén, quiero corregir manualmente los datos extraídos por la IA si hay error.
+Nomenclatura correcta para el Project
+El formato que debes usar en el título de cada tarjeta/issue es:
+
+HU-XX: [Acción breve en infinitivo o sustantivo]
+Ejemplo: HU-01: Escaneo de código GTIN (no [HU01] Escaneo... con corchetes — el guion es el estándar más usado en Scrum/Jira/GitHub Projects, los corchetes se reservan para tipo de ítem si lo necesitas, ej. [BUG] HU-01: ...).
+
+Para las tareas técnicas que vimos que no son HU, la nomenclatura correcta es:
+
+TT-XX: [Descripción de la tarea técnica]
+Ejemplo: TT-01: Diseño de esquema MSSQL + NoSQL, TT-02: Estructura base Flutter MVVM + CI/CD.
+
+Listado completo de Historias de Usuario (según el documento)
+En total son 25 Historias de Usuario, divididas en 5 épicas:
+
+Épica A — Registro Inteligente (Almacén) — 4 HU
+
+HU-01: Escaneo de código GTIN
+HU-02: Captura de foto para validación con IA
+HU-03: Extracción automática de datos del medicamento
+HU-04: Edición manual de datos extraídos
+Épica B — Inventario y Abastecimiento — 5 HU
+
+HU-05: Listado de faltantes por guardia
+HU-06: Monitoreo de stock y requerimiento de pedido (Jefatura)
+HU-07: Visualización de requerimientos para orden de compra (Almacén)
+HU-08: Confirmación de recepción de medicamentos transferidos
+HU-09: Comparación entre distribuidoras
+Épica C — Peticiones y Dispensación a Áreas Críticas — 9 HU
+
+HU-10: Solicitud de kits estandarizados (SOP)
+HU-11: Solicitud de medicamentos individuales del catálogo
+HU-12: Solicitud de atención de receta (Emergencia)
+HU-13: Registro obligatorio de usuario, doctor y motivo/paciente
+HU-14: Visualización de pedidos entrantes en tablet de Farmacia
+HU-15: Marcar "Listo para Recojo" y notificar
+HU-16: Recepción de notificación de pedido listo
+HU-17: Adjuntar foto opcional en la salida de productos
+HU-18: Descuento automático de stock origen/destino
+Épica D — Dashboard de Jefatura y Auditoría — 4 HU
+
+HU-19: Búsqueda de trazabilidad por medicamento o lote
+HU-20: Visualización de stock total y por área en tiempo real
+HU-21: Gráficos de consumo por área/doctor/procedimiento
+HU-22: Alertas de caducidad (FEFO)
+Épica E — Transversales / Arquitectura — 3 HU
+
+HU-23: Inicio de sesión con rol específico
+HU-24: Orquestación de la API central (MSSQL + NoSQL)
+HU-25: Funcionamiento offline con sincronización
+Ahora, siendo realistas: ¿cuántas HU entran en el Sprint 1 (2 semanas)?
+Con 3 personas y 2 semanas, y considerando que la Semana 1 completa se va en cimientos técnicos (no en código de HU), el tiempo real de desarrollo de HU es aproximadamente 1 semana efectiva. Siendo realista, el Sprint 1 debería cerrar con:
+
+HU-23 (Inicio de sesión con rol) — completa.
+HU-01 (Escaneo GTIN) — completa.
+HU-02 (Foto para IA) — completa.
+HU-03 (Extracción automática) — en progreso o completa, según cuánto tarde la integración con Gemini.
+HU-04 (Edición manual) — probablemente pasa al Sprint 2 si HU-03 se atrasa, porque depende de que HU-03 ya funcione.
+Es decir: 3 HU cerradas con seguridad (HU-23, HU-01, HU-02) y 1-2 en progreso/por confirmar (HU-03, HU-04) — no las 25, y ni siquiera las 4 completas garantizadas, para no comprometerse de más en la demo de cierre.
+
+Reorganizing sprint tasks between planning stages.
+Reorganizing sprint tasks between planning stages.
+Perfecto, esa decisión es más sana. Tienes razón en la confusión: la Semana 1 fue 100% trabajo técnico de base (esquema de BD, estructura Flutter, wireframes), no código de HU01-HU04. Yo los etiqueté así para "amarrarlos" a una HU futura, pero eso generaba la confusión que notaste. Vamos a corregirlo del todo.
+
+Nueva decisión de alcance
+Sprint 1: solo cimientos técnicos + HU-23 (Inicio de sesión con rol), que es la única HU realmente básica y ya evidenciable esta quincena.
+Sprint 2: toda la Épica A — HU-01, HU-02, HU-03, HU-04 (Registro Inteligente) completa, porque es la que integra cámara + IA + validación, más compleja.
+Nomenclatura correcta para el Daily 1 (corregido)
+Las tareas de esta semana no son HU, son Tareas Técnicas (TT) y una Tarea de Diseño (DT). Así se colocan:
+
+Código	Nombre de la tarea	Tipo
+TT-01	Diseño de esquema MSSQL + colecciones NoSQL	Tarea Técnica
+TT-02	Contrato de API central (borrador)	Tarea Técnica
+TT-03	Estructura base Flutter (MVVM) + CI/CD + entornos Firebase	Tarea Técnica
+DT-01	Wireframes de interfaces por rol (Almacén, Jefatura, Enfermería)	Diseño UX
+TT-04	Documentación del modelo híbrido de datos (/docs)	Tarea Técnica
+Estas tareas no pertenecen a ninguna HU todavía porque son infraestructura transversal — sirven de base para varias HU a la vez (HU-01 a HU-25), no para una sola. Por eso no deben ir etiquetadas como "HU23" ni "HU24".
+
+Estado del tablero — corregido
+Columna	Ítems	WIP	¿Se respeta?
+Sprint backlog	HU-23 (Inicio de sesión)	—	—
+En progreso	TT-02 (Contrato API), DT-01 (Wireframe Enfermería), TT-04 (Documentación ER)	2 por persona	Sí
+En revisión	TT-01 (Esquema MSSQL/NoSQL)	3	Sí
+En pruebas	TT-03 (Estructura MVVM + CI/CD)	2	Sí
+Listo	TT-01 parcial (Colecciones NoSQL), DT-01 parcial (Wireframes Almacén y Jefatura)	—	—
+Nota clave: HU-23 recién entra en Sprint Backlog porque todavía no se ha empezado a construir el login en sí (eso depende de que TT-02, el contrato de API, esté cerrado). No debería aparecer todavía en "En progreso" — eso también corrige el error de antes.
+
+Sprint Goal — Sprint 1 (ajustado)
+"Establecer la base técnica del sistema (arquitectura MVVM, modelo de datos híbrido MSSQL + NoSQL, contrato de API) y dejar funcional el inicio de sesión con roles (HU-23), de modo que en el Sprint 2 el equipo pueda construir el módulo de Registro Inteligente (HU-01 a HU-04) sobre una base ya validada."
+
+Avance del objetivo del sprint (ajustado)
+% de tareas técnicas completadas: ~60% (TT-01, TT-03 y DT-01 muy avanzados)
+% de HU completadas (HU-23): 0% — aún no inicia desarrollo, entra en Semana 2 del sprint
+¿El Sprint Goal sigue siendo alcanzable? Sí
+¿Quieres que te arme también cómo queda el Sprint Backlog completo del Sprint 1 (Semana 2) ahora que HU-01 a HU-04 se mueven a Sprint 2 — es decir, qué le toca a cada uno para dejar HU-23 realmente lista?
+
+recuerda que son dos dailys, este sprint, esta semana iria la tabal que me diste o la mitad?
+
+Clarifying the scope of the sprint backlog table.
+Clarifying the scope of the sprint backlog table.
+La tabla completa que te di corresponde a esta semana completa (Daily 1), no es la mitad — porque todo lo que aparece ahí (TT-01, TT-02 borrador, TT-03, DT-01, TT-04) es exactamente lo que Bruno, Walter y David ya reportaron como hecho en su primer daily. No hay que partirla.
+
+Lo que sí queda pendiente para la Semana 2 (Daily 2) es:
+
+Terminar lo que quedó a medias esta semana: TT-02 (cerrar el contrato de API), DT-01 (wireframe de Enfermería), TT-04 (terminar documentación ER).
+Recién ahí arranca el desarrollo real de HU-23 (login con roles), pasando de "Sprint Backlog" a "En progreso".
+Cómo queda dividido entre las 2 semanas del Sprint 1
+Semana 1 (Daily 1) — ya cerrada, es la tabla completa que viste:
+
+TT-01: Esquema MSSQL + NoSQL → Listo/En revisión
+TT-02: Contrato de API → En progreso
+TT-03: Estructura Flutter + CI/CD → En pruebas
+DT-01: Wireframes → Listo (parcial) / En progreso (Enfermería)
+TT-04: Documentación ER → En progreso
+HU-23: Sprint Backlog (sin iniciar)
+Semana 2 (Daily 2) — lo que falta:
+
+Cerrar TT-02, DT-01 y TT-04 (pasar todo a "Listo").
+Desarrollar HU-23 completa: pantalla de login, LoginViewModel, conexión con endpoint de auth, enrutamiento por rol, pruebas.
+Demo de cierre del Sprint 1: mostrar login funcional con los 3 roles diferenciados.
+Así el Daily 2 no repite nada de lo ya hecho, solo reporta el cierre de las tareas técnicas colgantes y el avance real de HU-23, que es la única HU comprometida en este sprint.
+
+a que te refieres con contrato de api
+
+Buena pregunta, es un término que puede sonar confuso si no se ha visto antes.
+
+Un "contrato de API" es el documento donde se define, ANTES de programar, cómo va a "hablar" el frontend (la app Flutter) con el backend (la API que conecta con MSSQL y NoSQL). Es básicamente un acuerdo por escrito de:
+
+Qué endpoints (URLs) va a tener la API. Ejemplo: POST /medicamentos, GET /stock, POST /transferencias.
+Qué datos hay que enviarle a cada uno (el "request"). Ejemplo, para POST /medicamentos:
+json
+{
+  "gtin": "7501234567890",
+  "nombreComercial": "Paracetamol 500mg",
+  "lote": "L2026A",
+  "fechaVencimiento": "2027-05-01"
+}
+Qué te va a devolver cada uno (el "response"). Ejemplo:
+json
+{
+  "id": "med_001",
+  "estado": "registrado",
+  "mensaje": "Medicamento ingresado correctamente"
+}
+Qué errores puede devolver y con qué código (ej. 400 si falta un campo, 401 si no está autenticado, 404 si no existe el lote).
+Por qué es importante hacerlo ANTES de programar
+Es la razón por la que Bruno (backend/BD) y Walter/quien haga el frontend pueden trabajar en paralelo sin bloquearse: si ya está definido que el login (POST /auth/login) va a recibir {usuario, contraseña} y devolver {token, rol}, entonces:
+
+David/Walter pueden construir la pantalla de Login usando ese formato como referencia, aunque el backend real todavía no exista (usan datos "simulados" con ese mismo formato).
+Bruno construye el backend real sabiendo exactamente qué se espera que reciba y devuelva.
+Cuando ambos terminan, se conectan sin sorpresas porque respetaron el mismo "contrato".
+
+En qué formato se hace normalmente
+No hace falta algo muy elaborado para un proyecto académico. Puede ser:
+
+Un archivo Markdown simple en /docs/api-contract.md con la lista de endpoints (como el ejemplo de arriba).
+O, más formal, un archivo OpenAPI/Swagger (un estándar para documentar APIs) — pero para tu nivel de proyecto, el Markdown simple es suficiente y más rápido de sustentar.
