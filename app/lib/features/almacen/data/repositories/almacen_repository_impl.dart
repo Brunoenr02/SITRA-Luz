@@ -55,6 +55,40 @@ class AlmacenRepositoryImpl implements AlmacenRepository {
   }
 
   @override
+  Future<MedicamentoEntity> editarMedicamento({
+    required String id,
+    required String gtin,
+    required String nombreComercial,
+    required String principioActivo,
+    required String formaFarmaceutica,
+    required String concentracion,
+    String? registroSanitario,
+    String unidadPresentacion = 'unidad',
+    int cantidadPorPresentacion = 1,
+    bool requiereCadenaFrio = false,
+    double temperaturaMin = 2.0,
+    double temperaturaMax = 8.0,
+    bool activo = true,
+  }) async {
+    final model = MedicamentoModel(
+      id: id,
+      gtin: gtin,
+      nombreComercial: nombreComercial,
+      principioActivo: principioActivo,
+      formaFarmaceutica: formaFarmaceutica,
+      concentracion: concentracion,
+      registroSanitario: registroSanitario,
+      unidadPresentacion: unidadPresentacion,
+      cantidadPorPresentacion: cantidadPorPresentacion,
+      requiereCadenaFrio: requiereCadenaFrio,
+      temperaturaMin: temperaturaMin,
+      temperaturaMax: temperaturaMax,
+      activo: activo,
+    );
+    return await _dataSource.editarMedicamento(model);
+  }
+
+  @override
   Future<LoteEntity> registrarIngresoLote({
     required String medicamentoId,
     required String numeroLote,

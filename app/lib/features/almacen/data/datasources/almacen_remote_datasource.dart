@@ -82,6 +82,29 @@ class AlmacenRemoteDataSource {
     }
   }
 
+  /// Actualiza los datos técnicos de un medicamento existente en el catálogo (RF-016)
+  Future<MedicamentoModel> editarMedicamento(MedicamentoModel medicamento) async {
+    try {
+      final response = await _supabase
+          .from('medicamentos')
+          .update(medicamento.toMap())
+          .eq('id', medicamento.id)
+          .select()
+          .single();
+
+      debugPrint('✅ Medicamento actualizado exitosamente en Supabase: ${response['nombre_comercial']}');
+      return MedicamentoModel.fromMap(response);
+    } on PostgrestException catch (e) {
+      if (e.message.contains('gtin') || e.code == '23505') {
+        throw const AlmacenException('El código GTIN ya pertenece a otro medicamento registrado.');
+      }
+      throw AlmacenException('Error al actualizar en la base de datos: ${e.message}');
+    } catch (e) {
+      if (e is AlmacenException) rethrow;
+      throw AlmacenException('No se pudo actualizar el medicamento: $e');
+    }
+  }
+
   /// Registra un ingreso de lote y suma el stock físico en el Almacén General
   Future<LoteModel> registrarIngresoLote({
     required String medicamentoId,

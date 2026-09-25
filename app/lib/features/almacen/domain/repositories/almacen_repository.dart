@@ -26,6 +26,23 @@ abstract class AlmacenRepository {
     double temperaturaMax = 8.0,
   });
 
+  /// Actualiza los datos técnicos de un medicamento existente en el catálogo (RF-016)
+  Future<MedicamentoEntity> editarMedicamento({
+    required String id,
+    required String gtin,
+    required String nombreComercial,
+    required String principioActivo,
+    required String formaFarmaceutica,
+    required String concentracion,
+    String? registroSanitario,
+    String unidadPresentacion = 'unidad',
+    int cantidadPorPresentacion = 1,
+    bool requiereCadenaFrio = false,
+    double temperaturaMin = 2.0,
+    double temperaturaMax = 8.0,
+    bool activo = true,
+  });
+
   /// Registra un ingreso de lote y agrega el stock correspondiente en Almacén
   Future<LoteEntity> registrarIngresoLote({
     required String medicamentoId,

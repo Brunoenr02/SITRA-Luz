@@ -6,8 +6,10 @@ import '../../../almacen/domain/entities/lote_entity.dart';
 import '../../../almacen/domain/entities/stock_almacen_entity.dart';
 import '../../../almacen/presentation/states/almacen_state.dart';
 import '../../../almacen/presentation/viewmodels/almacen_viewmodel.dart';
+import '../../../almacen/domain/entities/medicamento_entity.dart';
 import '../../../almacen/presentation/views/dialogs/ingreso_lote_dialog.dart';
 import '../../../almacen/presentation/views/dialogs/transferir_a_farmacia_dialog.dart';
+import '../../../almacen/presentation/views/editar_medicamento_view.dart';
 import '../../../almacen/presentation/views/escaner_gtin_view.dart';
 import '../../../almacen/presentation/views/registro_medicamento_view.dart';
 import '../../../almacen/presentation/views/solicitudes_abastecimiento_view.dart';
@@ -32,6 +34,14 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
   void _abrirSolicitudesAbastecimiento() {
     Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => const SolicitudesAbastecimientoView()),
+    );
+  }
+
+  void _abrirEdicionMedicamento(MedicamentoEntity medicamento) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => EditarMedicamentoView(medicamento: medicamento),
+      ),
     );
   }
 
@@ -718,10 +728,25 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
 
           const SizedBox(height: 10),
 
-          // Botón directo para Transferir a Farmacia (RF-025)
+          // Botones de acción del ítem (RF-016 y RF-025)
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
+              OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.textPrimary,
+                  side: BorderSide(color: AppColors.textSecondary.withOpacity(0.3)),
+                  visualDensity: VisualDensity.compact,
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                ),
+                onPressed: () => _abrirEdicionMedicamento(med),
+                icon: const Icon(Icons.edit_outlined, size: 15),
+                label: const Text(
+                  'Editar',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                ),
+              ),
+              const SizedBox(width: 8),
               OutlinedButton.icon(
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.farmaciaColor,

@@ -33,8 +33,13 @@ class AlmacenLoaded extends AlmacenState {
   int get totalUnidades => inventario.fold(0, (sum, item) => sum + item.cantidad);
 
   /// Cantidad de solicitudes de abastecimiento pendientes por atender (RF-031)
-  int get solicitudesPendientes =>
-      solicitudes.where((s) => s.esPendiente).length;
+  int get solicitudesPendientes {
+    try {
+      return (solicitudes).where((s) => s.esPendiente).length;
+    } catch (_) {
+      return 0;
+    }
+  }
 
   /// Cantidad de lotes en estado crítico (< 30 días de vencimiento)
   int get lotesCriticos =>

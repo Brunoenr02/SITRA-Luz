@@ -107,6 +107,55 @@ class AlmacenViewModel extends ChangeNotifier {
     }
   }
 
+  /// Actualiza los datos técnicos de un medicamento existente en el catálogo (RF-016)
+  Future<bool> editarMedicamento({
+    required String id,
+    required String gtin,
+    required String nombreComercial,
+    required String principioActivo,
+    required String formaFarmaceutica,
+    required String concentracion,
+    String? registroSanitario,
+    String unidadPresentacion = 'unidad',
+    int cantidadPorPresentacion = 1,
+    bool requiereCadenaFrio = false,
+    double temperaturaMin = 2.0,
+    double temperaturaMax = 8.0,
+    bool activo = true,
+  }) async {
+    _isSaving = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      await _repository.editarMedicamento(
+        id: id,
+        gtin: gtin,
+        nombreComercial: nombreComercial,
+        principioActivo: principioActivo,
+        formaFarmaceutica: formaFarmaceutica,
+        concentracion: concentracion,
+        registroSanitario: registroSanitario,
+        unidadPresentacion: unidadPresentacion,
+        cantidadPorPresentacion: cantidadPorPresentacion,
+        requiereCadenaFrio: requiereCadenaFrio,
+        temperaturaMin: temperaturaMin,
+        temperaturaMax: temperaturaMax,
+        activo: activo,
+      );
+
+      // Recargar catálogo e inventario
+      await cargarInventario();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      return false;
+    } finally {
+      _isSaving = false;
+      notifyListeners();
+    }
+  }
+
   /// Registra un nuevo ingreso de lote para un medicamento que ya existe en el catálogo
   Future<bool> registrarLoteParaMedicamentoExistente({
     required String medicamentoId,
