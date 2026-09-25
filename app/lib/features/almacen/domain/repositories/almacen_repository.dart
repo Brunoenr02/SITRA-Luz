@@ -36,4 +36,12 @@ abstract class AlmacenRepository {
     String? observaciones,
     required int cantidadInicial,
   });
+
+  /// Transfiere stock de un lote específico desde Almacén hacia Farmacia Central (RF-025)
+  Future<void> transferirStockAFarmacia({
+    required String loteId,
+    required String medicamentoId,
+    required int cantidad,
+    String? motivo,
+  });
 }

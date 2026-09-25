@@ -7,6 +7,7 @@ import '../../../almacen/domain/entities/stock_almacen_entity.dart';
 import '../../../almacen/presentation/states/almacen_state.dart';
 import '../../../almacen/presentation/viewmodels/almacen_viewmodel.dart';
 import '../../../almacen/presentation/views/dialogs/ingreso_lote_dialog.dart';
+import '../../../almacen/presentation/views/dialogs/transferir_a_farmacia_dialog.dart';
 import '../../../almacen/presentation/views/escaner_gtin_view.dart';
 import '../../../almacen/presentation/views/registro_medicamento_view.dart';
 import '../../../auth/presentation/viewmodels/auth_viewmodel.dart';
@@ -111,6 +112,16 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
     showDialog(
       context: context,
       builder: (_) => IngresoLoteDialog(catalogo: loaded.catalogo),
+    );
+  }
+
+  void _abrirTransferenciaAFarmacia(AlmacenLoaded loaded, {StockAlmacenEntity? itemInicial}) {
+    showDialog(
+      context: context,
+      builder: (_) => TransferirAFarmaciaDialog(
+        inventario: loaded.inventario,
+        itemInicial: itemInicial,
+      ),
     );
   }
 
@@ -325,32 +336,70 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.surface,
                         foregroundColor: AppColors.almacenColor,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        fixedSize: const Size.fromHeight(48),
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                        elevation: 0,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                           side: const BorderSide(color: AppColors.almacenColor, width: 1.5),
                         ),
                       ),
                       onPressed: _abrirRegistroMedicamento,
-                      icon: const Icon(Icons.add_circle_outline_rounded),
-                      label: const Text('Nuevo Artículo', style: TextStyle(fontWeight: FontWeight.bold)),
+                      icon: const Icon(Icons.add_circle_outline_rounded, size: 18),
+                      label: const Text(
+                        'Nuevo',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.surface,
                         foregroundColor: AppColors.primary,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        fixedSize: const Size.fromHeight(48),
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                        elevation: 0,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                           side: const BorderSide(color: AppColors.primary, width: 1.5),
                         ),
                       ),
                       onPressed: state is AlmacenLoaded ? () => _abrirIngresoLote(state) : null,
-                      icon: const Icon(Icons.playlist_add_rounded),
-                      label: const Text('Ingresar Lote', style: TextStyle(fontWeight: FontWeight.bold)),
+                      icon: const Icon(Icons.playlist_add_rounded, size: 18),
+                      label: const Text(
+                        'Ingreso',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.surface,
+                        foregroundColor: AppColors.farmaciaColor,
+                        fixedSize: const Size.fromHeight(48),
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: const BorderSide(color: AppColors.farmaciaColor, width: 1.5),
+                        ),
+                      ),
+                      onPressed: state is AlmacenLoaded ? () => _abrirTransferenciaAFarmacia(state) : null,
+                      icon: const Icon(Icons.swap_horiz_rounded, size: 18),
+                      label: const Text(
+                        'Transferir',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                      ),
                     ),
                   ),
                 ],
@@ -424,7 +473,7 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
                     separatorBuilder: (_, __) => const SizedBox(height: 10),
                     itemBuilder: (context, index) {
                       final item = state.inventario[index];
-                      return _buildStockItemCard(item);
+                      return _buildStockItemCard(item, state);
                     },
                   ),
               ],
@@ -436,7 +485,7 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
     );
   }
 
-  Widget _buildStockItemCard(StockAlmacenEntity item) {
+  Widget _buildStockItemCard(StockAlmacenEntity item, AlmacenLoaded loaded) {
     final med = item.medicamento;
     final lote = item.lote;
 
@@ -564,6 +613,31 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
                 icon: Icons.qr_code_rounded,
                 text: med.gtin,
                 color: AppColors.textSecondary,
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 10),
+
+          // Botón directo para Transferir a Farmacia (RF-025)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.farmaciaColor,
+                  side: const BorderSide(color: AppColors.farmaciaColor),
+                  visualDensity: VisualDensity.compact,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                ),
+                onPressed: item.cantidad > 0
+                    ? () => _abrirTransferenciaAFarmacia(loaded, itemInicial: item)
+                    : null,
+                icon: const Icon(Icons.swap_horiz_rounded, size: 16),
+                label: const Text(
+                  'Transferir a Farmacia',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                ),
               ),
             ],
           ),

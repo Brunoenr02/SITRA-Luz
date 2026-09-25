@@ -75,4 +75,19 @@ class AlmacenRepositoryImpl implements AlmacenRepository {
       cantidadInicial: cantidadInicial,
     );
   }
+
+  @override
+  Future<void> transferirStockAFarmacia({
+    required String loteId,
+    required String medicamentoId,
+    required int cantidad,
+    String? motivo,
+  }) async {
+    await _dataSource.transferirStockAFarmacia(
+      loteId: loteId,
+      medicamentoId: medicamentoId,
+      cantidad: cantidad,
+      motivo: motivo,
+    );
+  }
 }

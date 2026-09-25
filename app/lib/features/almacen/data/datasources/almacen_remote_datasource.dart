@@ -149,6 +149,89 @@ class AlmacenRemoteDataSource {
     }
   }
 
+  /// Transfiere stock de un lote específico desde Almacén hacia Farmacia Central (RF-025)
+  Future<void> transferirStockAFarmacia({
+    required String loteId,
+    required String medicamentoId,
+    required int cantidad,
+    String? motivo,
+  }) async {
+    try {
+      // 1. Obtener el stock actual en Almacén
+      final stockAlmacenResp = await _supabase
+          .from('inventario_stock')
+          .select('id, cantidad')
+          .eq('lote_id', loteId)
+          .eq('area_codigo', 'ALMACEN')
+          .maybeSingle();
+
+      if (stockAlmacenResp == null) {
+        throw const AlmacenException('No se encontró stock registrado para este lote en Almacén.');
+      }
+
+      final int stockActual = stockAlmacenResp['cantidad'] as int? ?? 0;
+      if (stockActual < cantidad) {
+        throw AlmacenException('Stock insuficiente en Almacén. Disponible: $stockActual, solicitado: $cantidad.');
+      }
+
+      // 2. Decrementar stock en Almacén
+      final nuevoStockAlmacen = stockActual - cantidad;
+      await _supabase
+          .from('inventario_stock')
+          .update({
+            'cantidad': nuevoStockAlmacen,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('id', stockAlmacenResp['id']);
+
+      // 3. Incrementar o insertar stock en Farmacia
+      final stockFarmaciaResp = await _supabase
+          .from('inventario_stock')
+          .select('id, cantidad')
+          .eq('lote_id', loteId)
+          .eq('area_codigo', 'FARMACIA')
+          .maybeSingle();
+
+      if (stockFarmaciaResp != null) {
+        final int stockFarmaciaActual = stockFarmaciaResp['cantidad'] as int? ?? 0;
+        await _supabase
+            .from('inventario_stock')
+            .update({
+              'cantidad': stockFarmaciaActual + cantidad,
+              'updated_at': DateTime.now().toIso8601String(),
+            })
+            .eq('id', stockFarmaciaResp['id']);
+      } else {
+        await _supabase.from('inventario_stock').insert({
+          'lote_id': loteId,
+          'area_codigo': 'FARMACIA',
+          'cantidad': cantidad,
+        });
+      }
+
+      // 4. Registrar en auditoría inmutable
+      final currentUserId = _supabase.auth.currentUser?.id;
+      await _supabase.from('auditoria_trazabilidad').insert({
+        'tipo_evento': 'TRANSFERENCIA_FARMACIA',
+        'medicamento_id': medicamentoId,
+        'lote_id': loteId,
+        'usuario_id': currentUserId,
+        'area_origen': 'ALMACEN',
+        'area_destino': 'FARMACIA',
+        'cantidad': cantidad,
+        'descripcion':
+            'Transferencia de $cantidad unidades hacia Farmacia Central. ${motivo != null && motivo.isNotEmpty ? "Motivo: $motivo" : ""}',
+      });
+
+      debugPrint('✅ Transferencia a Farmacia completada exitosamente: $cantidad unidades.');
+    } on PostgrestException catch (e) {
+      throw AlmacenException('Error al transferir stock en Supabase: ${e.message}');
+    } catch (e) {
+      if (e is AlmacenException) rethrow;
+      throw AlmacenException('Error al procesar la transferencia de stock: $e');
+    }
+  }
+
   // --- Datos de contingencia / offline ---
 
   List<MedicamentoModel> _getMockMedicamentos() {

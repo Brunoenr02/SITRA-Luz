@@ -142,4 +142,34 @@ class AlmacenViewModel extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  /// Transfiere stock físico de un lote desde Almacén hacia Farmacia Central (RF-025)
+  Future<bool> transferirStockAFarmacia({
+    required String loteId,
+    required String medicamentoId,
+    required int cantidad,
+    String? motivo,
+  }) async {
+    _isSaving = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      await _repository.transferirStockAFarmacia(
+        loteId: loteId,
+        medicamentoId: medicamentoId,
+        cantidad: cantidad,
+        motivo: motivo,
+      );
+
+      await cargarInventario();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      return false;
+    } finally {
+      _isSaving = false;
+      notifyListeners();
+    }
+  }
 }
