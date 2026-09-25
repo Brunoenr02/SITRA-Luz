@@ -23,12 +23,21 @@ class AlmacenDashboardView extends StatefulWidget {
 }
 
 class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
+  final TextEditingController _searchController = TextEditingController();
+  String _filtroRapido = 'TODOS'; // 'TODOS', 'FRIO', 'FEFO', 'BAJO_STOCK'
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<AlmacenViewModel>().cargarInventario();
     });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   void _abrirSolicitudesAbastecimiento() {
@@ -147,6 +156,40 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
     final user = context.watch<AuthViewModel>().currentUser;
     final almacenVM = context.watch<AlmacenViewModel>();
     final state = almacenVM.state;
+
+    final List<StockAlmacenEntity> itemsFiltrados = state is AlmacenLoaded
+        ? state.inventario.where((item) {
+            final query = _searchController.text.trim().toLowerCase();
+            if (query.isNotEmpty) {
+              final coincideNombre =
+                  item.medicamento.nombreComercial.toLowerCase().contains(query);
+              final coincideDci =
+                  item.medicamento.principioActivo.toLowerCase().contains(query);
+              final coincideGtin =
+                  item.medicamento.gtin.toLowerCase().contains(query);
+              final coincideLote =
+                  item.lote.numeroLote.toLowerCase().contains(query);
+              if (!coincideNombre &&
+                  !coincideDci &&
+                  !coincideGtin &&
+                  !coincideLote) {
+                return false;
+              }
+            }
+
+            switch (_filtroRapido) {
+              case 'FRIO':
+                return item.medicamento.requiereCadenaFrio;
+              case 'FEFO':
+                return item.lote.diasParaVencer <= 30;
+              case 'BAJO_STOCK':
+                return item.cantidad <= 20;
+              case 'TODOS':
+              default:
+                return true;
+            }
+          }).toList()
+        : [];
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -516,7 +559,7 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
 
               const SizedBox(height: 24),
 
-              // 4. LISTADO DE INVENTARIO FÍSICO
+              // 4. LISTADO DE INVENTARIO FÍSICO CON BÚSQUEDA Y FILTROS (RF-013 / RF-023)
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -530,7 +573,7 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
                   ),
                   if (state is AlmacenLoaded)
                     Text(
-                      '${state.inventario.length} ítems',
+                      '${itemsFiltrados.length} de ${state.inventario.length} lotes',
                       style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
@@ -542,6 +585,81 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
               const SizedBox(height: 12),
 
               if (state is AlmacenLoaded) ...[
+                if (state.inventario.isNotEmpty) ...[
+                  // Barra de Búsqueda Rápida en tiempo real
+                  Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.surfaceVariant),
+                    ),
+                    child: TextField(
+                      controller: _searchController,
+                      onChanged: (_) => setState(() {}),
+                      decoration: InputDecoration(
+                        hintText: 'Buscar por nombre, DCI, GTIN o lote...',
+                        hintStyle: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                        prefixIcon: const Icon(Icons.search_rounded, color: AppColors.almacenColor, size: 20),
+                        suffixIcon: _searchController.text.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(Icons.clear_rounded, size: 18),
+                                onPressed: () {
+                                  _searchController.clear();
+                                  setState(() {});
+                                },
+                              )
+                            : null,
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+
+                  // Chips de Filtro Rápido
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        _buildFiltroChip(
+                          label: 'Todos',
+                          count: state.inventario.length,
+                          isSelected: _filtroRapido == 'TODOS',
+                          onTap: () => setState(() => _filtroRapido = 'TODOS'),
+                        ),
+                        const SizedBox(width: 8),
+                        _buildFiltroChip(
+                          label: 'Cadena de Frío',
+                          icon: Icons.ac_unit_rounded,
+                          iconColor: Colors.cyan,
+                          count: state.articulosCadenaFrio,
+                          isSelected: _filtroRapido == 'FRIO',
+                          onTap: () => setState(() => _filtroRapido = 'FRIO'),
+                        ),
+                        const SizedBox(width: 8),
+                        _buildFiltroChip(
+                          label: 'FEFO Crítico',
+                          icon: Icons.warning_amber_rounded,
+                          iconColor: AppColors.error,
+                          count: state.lotesCriticos,
+                          isSelected: _filtroRapido == 'FEFO',
+                          onTap: () => setState(() => _filtroRapido = 'FEFO'),
+                        ),
+                        const SizedBox(width: 8),
+                        _buildFiltroChip(
+                          label: 'Bajo Stock',
+                          icon: Icons.inventory_2_outlined,
+                          iconColor: AppColors.warning,
+                          count: state.inventario.where((i) => i.cantidad <= 20).length,
+                          isSelected: _filtroRapido == 'BAJO_STOCK',
+                          onTap: () => setState(() => _filtroRapido = 'BAJO_STOCK'),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                ],
+
                 if (state.inventario.isEmpty)
                   Container(
                     width: double.infinity,
@@ -574,14 +692,51 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
                       ],
                     ),
                   )
+                else if (itemsFiltrados.isEmpty)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: AppColors.surfaceVariant),
+                    ),
+                    child: Column(
+                      children: [
+                        const Icon(Icons.search_off_rounded, size: 44, color: AppColors.textSecondary),
+                        const SizedBox(height: 10),
+                        const Text(
+                          'No se encontraron medicamentos',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                        ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          'No hay coincidencias para los filtros o término de búsqueda ingresado.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                        ),
+                        const SizedBox(height: 14),
+                        OutlinedButton.icon(
+                          onPressed: () {
+                            setState(() {
+                              _searchController.clear();
+                              _filtroRapido = 'TODOS';
+                            });
+                          },
+                          icon: const Icon(Icons.refresh_rounded, size: 16),
+                          label: const Text('Limpiar filtros'),
+                        ),
+                      ],
+                    ),
+                  )
                 else
                   ListView.separated(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    itemCount: state.inventario.length,
+                    itemCount: itemsFiltrados.length,
                     separatorBuilder: (_, __) => const SizedBox(height: 10),
                     itemBuilder: (context, index) {
-                      final item = state.inventario[index];
+                      final item = itemsFiltrados[index];
                       return _buildStockItemCard(item, state);
                     },
                   ),
@@ -766,6 +921,73 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildFiltroChip({
+    required String label,
+    required int count,
+    required bool isSelected,
+    required VoidCallback onTap,
+    IconData? icon,
+    Color? iconColor,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppColors.almacenColor.withOpacity(0.12)
+              : AppColors.surface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? AppColors.almacenColor : AppColors.surfaceVariant,
+            width: isSelected ? 1.5 : 1.0,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null) ...[
+              Icon(
+                icon,
+                size: 14,
+                color: isSelected ? AppColors.almacenColor : (iconColor ?? AppColors.textSecondary),
+              ),
+              const SizedBox(width: 6),
+            ],
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                color: isSelected ? AppColors.almacenColor : AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(width: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? AppColors.almacenColor
+                    : AppColors.surfaceVariant,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                '$count',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: isSelected ? Colors.white : AppColors.textSecondary,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
