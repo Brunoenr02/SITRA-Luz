@@ -7,6 +7,7 @@ import '../../../almacen/domain/entities/stock_almacen_entity.dart';
 import '../../../almacen/presentation/states/almacen_state.dart';
 import '../../../almacen/presentation/viewmodels/almacen_viewmodel.dart';
 import '../../../almacen/presentation/views/dialogs/ingreso_lote_dialog.dart';
+import '../../../almacen/presentation/views/escaner_gtin_view.dart';
 import '../../../almacen/presentation/views/registro_medicamento_view.dart';
 import '../../../auth/presentation/viewmodels/auth_viewmodel.dart';
 
@@ -26,9 +27,83 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
     });
   }
 
+  void _abrirEscanerCamara() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const EscanerGtinView()),
+    );
+  }
+
   void _abrirRegistroMedicamento() {
     Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => const RegistroMedicamentoView()),
+    );
+  }
+
+  void _mostrarOpcionesRegistro() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return Container(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Recepción e Ingreso de Medicamento',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                'Elige el método de captura según el protocolo de Almacén (RF-014):',
+                style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 16),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppColors.almacenColor.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.qr_code_scanner_rounded, color: AppColors.almacenColor),
+                ),
+                title: const Text('Escanear con Cámara (ML Kit + IA)', style: TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: const Text('Lectura instantánea de GTIN + foto opcional de caja para extracción asistida'),
+                trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
+                onTap: () {
+                  Navigator.of(ctx).pop();
+                  _abrirEscanerCamara();
+                },
+              ),
+              const Divider(),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceVariant,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.edit_note_rounded, color: AppColors.textPrimary),
+                ),
+                title: const Text('Ingreso Manual', style: TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: const Text('Completar formulario técnico de medicamento y lote paso a paso'),
+                trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
+                onTap: () {
+                  Navigator.of(ctx).pop();
+                  _abrirRegistroMedicamento();
+                },
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -54,9 +129,9 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: AppColors.almacenColor,
         foregroundColor: Colors.white,
-        onPressed: _abrirRegistroMedicamento,
-        icon: const Icon(Icons.add_rounded),
-        label: const Text('Registrar Medicamento', style: TextStyle(fontWeight: FontWeight.bold)),
+        onPressed: _mostrarOpcionesRegistro,
+        icon: const Icon(Icons.qr_code_scanner_rounded),
+        label: const Text('Ingresar Medicamento', style: TextStyle(fontWeight: FontWeight.bold)),
       ),
       body: RefreshIndicator(
         color: AppColors.almacenColor,

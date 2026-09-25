@@ -46,6 +46,10 @@ dependencies:
   google_fonts: ^8.1.0
   shared_preferences: ^2.5.5
 
+  # Cámara y Escaneo de Códigos de Barra (ML Kit Offline) e Imágenes
+  mobile_scanner: ^7.4.2
+  image_picker: ^1.2.3
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

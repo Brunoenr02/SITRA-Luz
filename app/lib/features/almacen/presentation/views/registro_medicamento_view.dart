@@ -1,11 +1,19 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../domain/entities/medicamento_extraccion_ia.dart';
 import '../viewmodels/almacen_viewmodel.dart';
+import 'escaner_gtin_view.dart';
 
-/// Formulario completo para registrar un nuevo medicamento y dar entrada a su primer lote en Almacén
+/// Formulario para registrar un nuevo medicamento y dar entrada a su primer lote en Almacén.
+/// Soporta precarga de datos extraídos por IA / Cámara (RF-014 y RF-015).
 class RegistroMedicamentoView extends StatefulWidget {
-  const RegistroMedicamentoView({super.key});
+  final MedicamentoExtraccionIA? datosIniciales;
+
+  const RegistroMedicamentoView({super.key, this.datosIniciales});
 
   @override
   State<RegistroMedicamentoView> createState() =>
@@ -14,6 +22,7 @@ class RegistroMedicamentoView extends StatefulWidget {
 
 class _RegistroMedicamentoViewState extends State<RegistroMedicamentoView> {
   final _formKey = GlobalKey<FormState>();
+  final ImagePicker _imagePicker = ImagePicker();
 
   // Controladores de Medicamento
   final _gtinController = TextEditingController();
@@ -26,6 +35,7 @@ class _RegistroMedicamentoViewState extends State<RegistroMedicamentoView> {
   bool _requiereCadenaFrio = false;
   final double _tempMin = 2.0;
   final double _tempMax = 8.0;
+  String? _fotoCajaPath;
 
   // Controladores de Lote
   final _loteController = TextEditingController();
@@ -44,6 +54,32 @@ class _RegistroMedicamentoViewState extends State<RegistroMedicamentoView> {
     'Ungüento',
     'Inhalador',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.datosIniciales != null) {
+      final d = widget.datosIniciales!;
+      _gtinController.text = d.gtin;
+      _nombreController.text = d.nombreComercial ?? '';
+      _principioActivoController.text = d.principioActivo ?? '';
+      _concentracionController.text = d.concentracion ?? '';
+      _registroSanitarioController.text = d.registroSanitario ?? '';
+      _loteController.text = d.numeroLote ?? '';
+      if (d.fechaVencimiento != null) {
+        _fechaVencimiento = d.fechaVencimiento!;
+      }
+      if (d.formaFarmaceutica != null &&
+          _formasDisponibles.contains(d.formaFarmaceutica)) {
+        _formaFarmaceutica = d.formaFarmaceutica!;
+      }
+      _requiereCadenaFrio = d.requiereCadenaFrio;
+      _fotoCajaPath = d.fotoCajaPath;
+      if (d.temperaturaSugerida != null) {
+        _tempRecepcionController.text = d.temperaturaSugerida.toString();
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -82,6 +118,36 @@ class _RegistroMedicamentoViewState extends State<RegistroMedicamentoView> {
       setState(() {
         _fechaVencimiento = seleccionada;
       });
+    }
+  }
+
+  Future<void> _abrirEscanerCamara() async {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const EscanerGtinView()),
+    );
+  }
+
+  Future<void> _capturarFotoCaja(ImageSource source) async {
+    try {
+      final XFile? imagen = await _imagePicker.pickImage(
+        source: source,
+        imageQuality: 85,
+        maxWidth: 1200,
+      );
+      if (imagen != null) {
+        setState(() {
+          _fotoCajaPath = imagen.path;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('No se pudo acceder a la cámara: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
     }
   }
 
@@ -153,6 +219,13 @@ class _RegistroMedicamentoViewState extends State<RegistroMedicamentoView> {
         backgroundColor: AppColors.almacenColor,
         foregroundColor: Colors.white,
         elevation: 0,
+        actions: [
+          IconButton(
+            tooltip: 'Escanear con Cámara (ML Kit)',
+            icon: const Icon(Icons.qr_code_scanner_rounded),
+            onPressed: _abrirEscanerCamara,
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -161,6 +234,45 @@ class _RegistroMedicamentoViewState extends State<RegistroMedicamentoView> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Banner de revisión de IA si viene del escáner (RF-015)
+              if (widget.datosIniciales != null) ...[
+                Container(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.amber.shade400),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.auto_awesome_rounded, color: Colors.amber.shade800),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Revisión de Datos Extraídos por IA (RF-015)',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                                color: Colors.amber.shade900,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Fuente: ${widget.datosIniciales!.fuente}. Revisa y corrige si es necesario antes de confirmar el registro.',
+                              style: TextStyle(fontSize: 11, color: Colors.amber.shade900),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+
               // 1. SECCIÓN: DATOS GENERALES DEL MEDICAMENTO
               _buildSectionHeader(
                 icon: Icons.medication_rounded,
@@ -196,6 +308,16 @@ class _RegistroMedicamentoViewState extends State<RegistroMedicamentoView> {
                           ),
                         ),
                         const SizedBox(width: 8),
+                        IconButton.filled(
+                          style: IconButton.styleFrom(
+                            backgroundColor: AppColors.almacenColor,
+                            foregroundColor: Colors.white,
+                          ),
+                          tooltip: 'Escanear con Cámara (ML Kit)',
+                          onPressed: _abrirEscanerCamara,
+                          icon: const Icon(Icons.qr_code_scanner_rounded),
+                        ),
+                        const SizedBox(width: 4),
                         IconButton.filledTonal(
                           tooltip: 'Generar código de prueba',
                           onPressed: _generarGtinDemo,
@@ -271,8 +393,9 @@ class _RegistroMedicamentoViewState extends State<RegistroMedicamentoView> {
                                 )
                                 .toList(),
                             onChanged: (val) {
-                              if (val != null)
+                              if (val != null) {
                                 setState(() => _formaFarmaceutica = val);
+                              }
                             },
                           ),
                         ),
@@ -343,6 +466,101 @@ class _RegistroMedicamentoViewState extends State<RegistroMedicamentoView> {
                             activeColor: Colors.cyan.shade700,
                             onChanged: (v) =>
                                 setState(() => _requiereCadenaFrio = v),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    // Foto de la Caja (Opcional - RF-014)
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceVariant.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.surfaceVariant),
+                      ),
+                      child: Row(
+                        children: [
+                          if (_fotoCajaPath != null && !kIsWeb)
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Image.file(
+                                File(_fotoCajaPath!),
+                                width: 48,
+                                height: 48,
+                                fit: BoxFit.cover,
+                              ),
+                            )
+                          else
+                            Container(
+                              width: 48,
+                              height: 48,
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade200,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Icon(
+                                Icons.photo_camera_outlined,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Foto de Caja / Empaque (Opcional - RF-014)',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  _fotoCajaPath != null
+                                      ? 'Foto adjuntada para validación y trazabilidad'
+                                      : 'Captura con cámara para auditoría visual',
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          PopupMenuButton<ImageSource>(
+                            tooltip: 'Tomar foto con cámara',
+                            icon: Icon(
+                              _fotoCajaPath != null
+                                  ? Icons.edit_rounded
+                                  : Icons.add_a_photo_rounded,
+                              color: AppColors.almacenColor,
+                            ),
+                            onSelected: _capturarFotoCaja,
+                            itemBuilder: (_) => const [
+                              PopupMenuItem(
+                                value: ImageSource.camera,
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.camera_alt_rounded, size: 20),
+                                    SizedBox(width: 8),
+                                    Text('Tomar con Cámara'),
+                                  ],
+                                ),
+                              ),
+                              PopupMenuItem(
+                                value: ImageSource.gallery,
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.photo_library_rounded, size: 20),
+                                    SizedBox(width: 8),
+                                    Text('Elegir de Galería'),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -465,8 +683,9 @@ class _RegistroMedicamentoViewState extends State<RegistroMedicamentoView> {
                               prefixIcon: Icon(Icons.add_shopping_cart_rounded),
                             ),
                             validator: (v) {
-                              if (v == null || v.trim().isEmpty)
+                              if (v == null || v.trim().isEmpty) {
                                 return 'Requerido';
+                              }
                               final n = int.tryParse(v);
                               if (n == null || n <= 0) return 'Mayor a 0';
                               return null;
