@@ -1,5 +1,6 @@
 import '../entities/medicamento_entity.dart';
 import '../entities/lote_entity.dart';
+import '../entities/pedido_abastecimiento_entity.dart';
 import '../entities/stock_almacen_entity.dart';
 
 /// Contrato del Repositorio de Almacén (Capa de Dominio)
@@ -43,5 +44,14 @@ abstract class AlmacenRepository {
     required String medicamentoId,
     required int cantidad,
     String? motivo,
+  });
+
+  /// Obtiene la lista de solicitudes de abastecimiento enviadas por Farmacia (RF-031)
+  Future<List<PedidoAbastecimientoEntity>> getSolicitudesAbastecimiento();
+
+  /// Marca una solicitud de abastecimiento como atendida/despachada (RF-031)
+  Future<void> atenderSolicitudAbastecimiento({
+    required String pedidoId,
+    String? notasDespacho,
   });
 }

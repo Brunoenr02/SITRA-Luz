@@ -10,6 +10,7 @@ import '../../../almacen/presentation/views/dialogs/ingreso_lote_dialog.dart';
 import '../../../almacen/presentation/views/dialogs/transferir_a_farmacia_dialog.dart';
 import '../../../almacen/presentation/views/escaner_gtin_view.dart';
 import '../../../almacen/presentation/views/registro_medicamento_view.dart';
+import '../../../almacen/presentation/views/solicitudes_abastecimiento_view.dart';
 import '../../../auth/presentation/viewmodels/auth_viewmodel.dart';
 
 class AlmacenDashboardView extends StatefulWidget {
@@ -26,6 +27,12 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<AlmacenViewModel>().cargarInventario();
     });
+  }
+
+  void _abrirSolicitudesAbastecimiento() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const SolicitudesAbastecimientoView()),
+    );
   }
 
   void _abrirEscanerCamara() {
@@ -133,9 +140,35 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: const SitraAppBar(
+      appBar: SitraAppBar(
         title: 'Almacén General',
         subtitle: 'Recepción, Lotes y Cadena de Frío',
+        actions: [
+          IconButton(
+            tooltip: 'Solicitudes de Farmacia',
+            icon: Badge(
+              isLabelVisible: state is AlmacenLoaded && state.solicitudesPendientes > 0,
+              label: Text(
+                '${state is AlmacenLoaded ? state.solicitudesPendientes : 0}',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 10),
+              ),
+              backgroundColor: AppColors.error,
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceVariant,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.assignment_rounded,
+                  size: 18,
+                  color: AppColors.almacenColor,
+                ),
+              ),
+            ),
+            onPressed: _abrirSolicitudesAbastecimiento,
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: AppColors.almacenColor,
@@ -243,6 +276,72 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
                   ],
                 ),
               ),
+
+              // BANNER INTERACTIVO DE SOLICITUDES PENDIENTES DE FARMACIA (RF-031)
+              if (state is AlmacenLoaded && state.solicitudesPendientes > 0) ...[
+                const SizedBox(height: 14),
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: _abrirSolicitudesAbastecimiento,
+                    borderRadius: BorderRadius.circular(14),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: AppColors.farmaciaColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: AppColors.farmaciaColor.withOpacity(0.4),
+                          width: 1.5,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppColors.farmaciaColor,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Icon(
+                              Icons.notifications_active_rounded,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '${state.solicitudesPendientes} ${state.solicitudesPendientes == 1 ? "solicitud pendiente" : "solicitudes pendientes"} de reposición',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                    color: AppColors.farmaciaColor,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                const Text(
+                                  'Farmacia Central requiere abastecimiento de stock (RF-031). Toca para revisar y despachar.',
+                                  style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          const Icon(
+                            Icons.arrow_forward_ios_rounded,
+                            size: 14,
+                            color: AppColors.farmaciaColor,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
 
               const SizedBox(height: 20),
 

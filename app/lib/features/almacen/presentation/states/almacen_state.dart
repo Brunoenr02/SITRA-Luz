@@ -1,5 +1,6 @@
 import '../../domain/entities/stock_almacen_entity.dart';
 import '../../domain/entities/medicamento_entity.dart';
+import '../../domain/entities/pedido_abastecimiento_entity.dart';
 
 /// Estado sellado de la interfaz de Almacén
 sealed class AlmacenState {
@@ -16,18 +17,24 @@ class AlmacenLoading extends AlmacenState {
   const AlmacenLoading();
 }
 
-/// Estado con datos de inventario cargados exitosamente
+/// Estado con datos de inventario y solicitudes cargados exitosamente
 class AlmacenLoaded extends AlmacenState {
   final List<StockAlmacenEntity> inventario;
   final List<MedicamentoEntity> catalogo;
+  final List<PedidoAbastecimientoEntity> solicitudes;
 
   const AlmacenLoaded({
     required this.inventario,
     required this.catalogo,
+    this.solicitudes = const [],
   });
 
   /// Total de unidades físicas en stock
   int get totalUnidades => inventario.fold(0, (sum, item) => sum + item.cantidad);
+
+  /// Cantidad de solicitudes de abastecimiento pendientes por atender (RF-031)
+  int get solicitudesPendientes =>
+      solicitudes.where((s) => s.esPendiente).length;
 
   /// Cantidad de lotes en estado crítico (< 30 días de vencimiento)
   int get lotesCriticos =>

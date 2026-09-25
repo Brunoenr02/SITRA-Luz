@@ -26,10 +26,12 @@ class AlmacenViewModel extends ChangeNotifier {
     try {
       final inventario = await _repository.getInventarioAlmacen();
       final catalogo = await _repository.getMedicamentos();
+      final solicitudes = await _repository.getSolicitudesAbastecimiento();
 
       _state = AlmacenLoaded(
         inventario: inventario,
         catalogo: catalogo,
+        solicitudes: solicitudes,
       );
       _errorMessage = null;
     } catch (e) {
@@ -160,6 +162,32 @@ class AlmacenViewModel extends ChangeNotifier {
         medicamentoId: medicamentoId,
         cantidad: cantidad,
         motivo: motivo,
+      );
+
+      await cargarInventario();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      return false;
+    } finally {
+      _isSaving = false;
+      notifyListeners();
+    }
+  }
+
+  /// Marca una solicitud de abastecimiento como despachada / atendida (RF-031)
+  Future<bool> atenderSolicitudAbastecimiento({
+    required String pedidoId,
+    String? notasDespacho,
+  }) async {
+    _isSaving = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      await _repository.atenderSolicitudAbastecimiento(
+        pedidoId: pedidoId,
+        notasDespacho: notasDespacho,
       );
 
       await cargarInventario();

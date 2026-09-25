@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/lote_model.dart';
 import '../models/medicamento_model.dart';
+import '../models/pedido_abastecimiento_model.dart';
 import '../models/stock_almacen_model.dart';
 
 /// Excepción de operaciones en el módulo de Almacén
@@ -232,6 +233,64 @@ class AlmacenRemoteDataSource {
     }
   }
 
+  /// Obtiene la lista de solicitudes de abastecimiento enviadas por Farmacia (RF-031)
+  Future<List<PedidoAbastecimientoModel>> getSolicitudesAbastecimiento() async {
+    try {
+      final response = await _supabase
+          .from('pedidos_abastecimiento')
+          .select(
+            '*, solicitante:profiles(nombre, cargo), items:pedidos_abastecimiento_items(*, medicamento:medicamentos(*))',
+          )
+          .order('fecha_solicitud', ascending: false);
+
+      final List<dynamic> data = response as List<dynamic>;
+      if (data.isEmpty) {
+        return _getMockSolicitudes();
+      }
+      return data
+          .map((item) => PedidoAbastecimientoModel.fromMap(item as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      debugPrint('⚠️ Error al consultar solicitudes de abastecimiento: $e. Retornando datos demo.');
+      return _getMockSolicitudes();
+    }
+  }
+
+  /// Marca una solicitud como despachada / atendida por el personal de Almacén (RF-031)
+  Future<void> atenderSolicitudAbastecimiento({
+    required String pedidoId,
+    String? notasDespacho,
+  }) async {
+    try {
+      await _supabase
+          .from('pedidos_abastecimiento')
+          .update({
+            'estado': 'DESPACHADO',
+            'fecha_despacho': DateTime.now().toIso8601String(),
+            if (notasDespacho != null && notasDespacho.isNotEmpty)
+              'notas': notasDespacho,
+          })
+          .eq('id', pedidoId);
+
+      final currentUserId = _supabase.auth.currentUser?.id;
+      await _supabase.from('auditoria_trazabilidad').insert({
+        'tipo_evento': 'TRANSFERENCIA_FARMACIA',
+        'usuario_id': currentUserId,
+        'area_origen': 'ALMACEN',
+        'area_destino': 'FARMACIA',
+        'descripcion':
+            'Atención de pedido de abastecimiento ($pedidoId). Estado actualizado a DESPACHADO.',
+      });
+
+      debugPrint('✅ Solicitud de abastecimiento atendida exitosamente: $pedidoId');
+    } on PostgrestException catch (e) {
+      throw AlmacenException('Error al actualizar la solicitud en Supabase: ${e.message}');
+    } catch (e) {
+      if (e is AlmacenException) rethrow;
+      throw AlmacenException('No se pudo atender la solicitud: $e');
+    }
+  }
+
   // --- Datos de contingencia / offline ---
 
   List<MedicamentoModel> _getMockMedicamentos() {
@@ -342,6 +401,64 @@ class AlmacenRemoteDataSource {
           temperaturaRecepcion: 4.1,
           activo: true,
         ),
+      ),
+    ];
+  }
+
+  List<PedidoAbastecimientoModel> _getMockSolicitudes() {
+    final meds = _getMockMedicamentos();
+    final ahora = DateTime.now();
+
+    return [
+      PedidoAbastecimientoModel(
+        id: 'mock-ped-001',
+        codigo: 'PED-2026-001',
+        solicitanteNombre: 'Lic. Carmen Valdivia (Farmacia Turno Mañana)',
+        areaOrigen: 'FARMACIA',
+        areaDestino: 'ALMACEN',
+        estado: 'PENDIENTE',
+        notas: 'Reposición urgente por alta afluencia en Emergencia y UCI',
+        fechaSolicitud: ahora.subtract(const Duration(minutes: 40)),
+        items: [
+          PedidoAbastecimientoItemModel(
+            id: 'mock-item-1',
+            pedidoId: 'mock-ped-001',
+            medicamentoId: meds[0].id,
+            nombreMedicamento: meds[0].nombreComercial,
+            concentracion: meds[0].concentracion,
+            cantidadSolicitada: 30,
+          ),
+          PedidoAbastecimientoItemModel(
+            id: 'mock-item-2',
+            pedidoId: 'mock-ped-001',
+            medicamentoId: meds[2].id,
+            nombreMedicamento: meds[2].nombreComercial,
+            concentracion: meds[2].concentracion,
+            cantidadSolicitada: 10,
+          ),
+        ],
+      ),
+      PedidoAbastecimientoModel(
+        id: 'mock-ped-002',
+        codigo: 'PED-2026-002',
+        solicitanteNombre: 'Q.F. Manuel Rodríguez (Farmacia Central)',
+        areaOrigen: 'FARMACIA',
+        areaDestino: 'ALMACEN',
+        estado: 'DESPACHADO',
+        notas: 'Abastecimiento de turno nocturno',
+        fechaSolicitud: ahora.subtract(const Duration(hours: 4)),
+        fechaDespacho: ahora.subtract(const Duration(hours: 3)),
+        items: [
+          PedidoAbastecimientoItemModel(
+            id: 'mock-item-3',
+            pedidoId: 'mock-ped-002',
+            medicamentoId: meds[1].id,
+            nombreMedicamento: meds[1].nombreComercial,
+            concentracion: meds[1].concentracion,
+            cantidadSolicitada: 20,
+            cantidadDespachada: 20,
+          ),
+        ],
       ),
     ];
   }

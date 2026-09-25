@@ -1,5 +1,6 @@
 import '../../domain/entities/lote_entity.dart';
 import '../../domain/entities/medicamento_entity.dart';
+import '../../domain/entities/pedido_abastecimiento_entity.dart';
 import '../../domain/entities/stock_almacen_entity.dart';
 import '../../domain/repositories/almacen_repository.dart';
 import '../datasources/almacen_remote_datasource.dart';
@@ -88,6 +89,22 @@ class AlmacenRepositoryImpl implements AlmacenRepository {
       medicamentoId: medicamentoId,
       cantidad: cantidad,
       motivo: motivo,
+    );
+  }
+
+  @override
+  Future<List<PedidoAbastecimientoEntity>> getSolicitudesAbastecimiento() async {
+    return await _dataSource.getSolicitudesAbastecimiento();
+  }
+
+  @override
+  Future<void> atenderSolicitudAbastecimiento({
+    required String pedidoId,
+    String? notasDespacho,
+  }) async {
+    await _dataSource.atenderSolicitudAbastecimiento(
+      pedidoId: pedidoId,
+      notasDespacho: notasDespacho,
     );
   }
 }
