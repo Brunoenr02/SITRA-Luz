@@ -8,7 +8,8 @@ class RegistroMedicamentoView extends StatefulWidget {
   const RegistroMedicamentoView({super.key});
 
   @override
-  State<RegistroMedicamentoView> createState() => _RegistroMedicamentoViewState();
+  State<RegistroMedicamentoView> createState() =>
+      _RegistroMedicamentoViewState();
 }
 
 class _RegistroMedicamentoViewState extends State<RegistroMedicamentoView> {
@@ -120,7 +121,9 @@ class _RegistroMedicamentoViewState extends State<RegistroMedicamentoView> {
     if (exito) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('✅ Medicamento y lote inicial ingresados al Almacén exitosamente'),
+          content: Text(
+            '✅ Medicamento y lote inicial ingresados al Almacén exitosamente',
+          ),
           backgroundColor: AppColors.success,
           behavior: SnackBarBehavior.floating,
         ),
@@ -129,7 +132,9 @@ class _RegistroMedicamentoViewState extends State<RegistroMedicamentoView> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('❌ Error: ${viewModel.errorMessage ?? "No se pudo guardar"}'),
+          content: Text(
+            '❌ Error: ${viewModel.errorMessage ?? "No se pudo guardar"}',
+          ),
           backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
         ),
@@ -185,8 +190,9 @@ class _RegistroMedicamentoViewState extends State<RegistroMedicamentoView> {
                               hintText: 'Ej: 7750215001234',
                               prefixIcon: Icon(Icons.qr_code_scanner_rounded),
                             ),
-                            validator: (v) =>
-                                (v == null || v.trim().isEmpty) ? 'Requerido' : null,
+                            validator: (v) => (v == null || v.trim().isEmpty)
+                                ? 'Requerido'
+                                : null,
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -207,8 +213,9 @@ class _RegistroMedicamentoViewState extends State<RegistroMedicamentoView> {
                         hintText: 'Ej: Amoxicilina 500mg, Meropenem 1g',
                         prefixIcon: Icon(Icons.label_outline_rounded),
                       ),
-                      validator: (v) =>
-                          (v == null || v.trim().isEmpty) ? 'Ingresa el nombre comercial' : null,
+                      validator: (v) => (v == null || v.trim().isEmpty)
+                          ? 'Ingresa el nombre comercial'
+                          : null,
                     ),
                     const SizedBox(height: 14),
 
@@ -220,37 +227,52 @@ class _RegistroMedicamentoViewState extends State<RegistroMedicamentoView> {
                         hintText: 'Ej: Amoxicilina Trihidrato',
                         prefixIcon: Icon(Icons.science_outlined),
                       ),
-                      validator: (v) =>
-                          (v == null || v.trim().isEmpty) ? 'Ingresa el principio activo' : null,
+                      validator: (v) => (v == null || v.trim().isEmpty)
+                          ? 'Ingresa el principio activo'
+                          : null,
                     ),
                     const SizedBox(height: 14),
 
                     // Concentración y Forma Farmacéutica
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
+                          flex: 4,
                           child: TextFormField(
                             controller: _concentracionController,
                             decoration: const InputDecoration(
                               labelText: 'Concentración *',
                               hintText: 'Ej: 500 mg, 1 g / 10ml',
                             ),
-                            validator: (v) =>
-                                (v == null || v.trim().isEmpty) ? 'Requerido' : null,
+                            validator: (v) => (v == null || v.trim().isEmpty)
+                                ? 'Requerido'
+                                : null,
                           ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
+                          flex: 5,
                           child: DropdownButtonFormField<String>(
                             value: _formaFarmaceutica,
+                            isExpanded: true,
                             decoration: const InputDecoration(
                               labelText: 'Forma Farmacéutica',
                             ),
                             items: _formasDisponibles
-                                .map((f) => DropdownMenuItem(value: f, child: Text(f)))
+                                .map(
+                                  (f) => DropdownMenuItem(
+                                    value: f,
+                                    child: Text(
+                                      f,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                )
                                 .toList(),
                             onChanged: (val) {
-                              if (val != null) setState(() => _formaFarmaceutica = val);
+                              if (val != null)
+                                setState(() => _formaFarmaceutica = val);
                             },
                           ),
                         ),
@@ -271,21 +293,28 @@ class _RegistroMedicamentoViewState extends State<RegistroMedicamentoView> {
 
                     // Switch Cadena de Frío
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
                         color: _requiereCadenaFrio
                             ? Colors.cyan.withOpacity(0.08)
                             : AppColors.surfaceVariant.withOpacity(0.4),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: _requiereCadenaFrio ? Colors.cyan : Colors.transparent,
+                          color: _requiereCadenaFrio
+                              ? Colors.cyan
+                              : Colors.transparent,
                         ),
                       ),
                       child: Row(
                         children: [
                           Icon(
                             Icons.ac_unit_rounded,
-                            color: _requiereCadenaFrio ? Colors.cyan.shade700 : Colors.grey,
+                            color: _requiereCadenaFrio
+                                ? Colors.cyan.shade700
+                                : Colors.grey,
                           ),
                           const SizedBox(width: 12),
                           const Expanded(
@@ -312,7 +341,8 @@ class _RegistroMedicamentoViewState extends State<RegistroMedicamentoView> {
                           Switch(
                             value: _requiereCadenaFrio,
                             activeColor: Colors.cyan.shade700,
-                            onChanged: (v) => setState(() => _requiereCadenaFrio = v),
+                            onChanged: (v) =>
+                                setState(() => _requiereCadenaFrio = v),
                           ),
                         ],
                       ),
@@ -352,8 +382,9 @@ class _RegistroMedicamentoViewState extends State<RegistroMedicamentoView> {
                               hintText: 'Ej: L2026-B04',
                               prefixIcon: Icon(Icons.numbers_rounded),
                             ),
-                            validator: (v) =>
-                                (v == null || v.trim().isEmpty) ? 'Requerido' : null,
+                            validator: (v) => (v == null || v.trim().isEmpty)
+                                ? 'Requerido'
+                                : null,
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -434,7 +465,8 @@ class _RegistroMedicamentoViewState extends State<RegistroMedicamentoView> {
                               prefixIcon: Icon(Icons.add_shopping_cart_rounded),
                             ),
                             validator: (v) {
-                              if (v == null || v.trim().isEmpty) return 'Requerido';
+                              if (v == null || v.trim().isEmpty)
+                                return 'Requerido';
                               final n = int.tryParse(v);
                               if (n == null || n <= 0) return 'Mayor a 0';
                               return null;
@@ -446,7 +478,10 @@ class _RegistroMedicamentoViewState extends State<RegistroMedicamentoView> {
                           Expanded(
                             child: TextFormField(
                               controller: _tempRecepcionController,
-                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
                               decoration: const InputDecoration(
                                 labelText: 'Temp. Recepción (°C)',
                                 hintText: 'Ej: 3.8',
@@ -486,7 +521,9 @@ class _RegistroMedicamentoViewState extends State<RegistroMedicamentoView> {
                         )
                       : const Icon(Icons.check_circle_outline_rounded),
                   label: Text(
-                    isSaving ? 'REGISTRANDO EN SUPABASE...' : 'REGISTRAR MEDICAMENTO Y STOCK',
+                    isSaving
+                        ? 'REGISTRANDO EN SUPABASE...'
+                        : 'REGISTRAR MEDICAMENTO Y STOCK',
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
